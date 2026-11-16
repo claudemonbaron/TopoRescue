@@ -163,6 +163,7 @@ code { font: .88em var(--f-mono) }
     <h2 style="margin:0" data-t="sez_locale"></h2>
     <div id="loc-si" class="stack" hidden>
       <p style="margin:0" data-t="loc_si"></p>
+      <ol class="ist" data-t="loc_passi"></ol>
       <p class="msg err" style="margin:0" data-t="loc_spazio"></p>
       <a class="btn sec" id="b-drive" target="_blank" rel="noopener" data-t="loc_drive"></a>
     </div>
@@ -195,7 +196,7 @@ code { font: .88em var(--f-mono) }
 // ---------------------------------------------------------------- impostazioni
 const SUPA_URL = "https://xorshypftmrbtyhrchwy.supabase.co";
 const SUPA_KEY = "sb_publishable_SghE7Wz8rNWEUVVhSpmFew_IBDCCqvk";     // chiave pubblica: fatta per stare nelle pagine
-const VERSIONE = "1.2";
+const VERSIONE = "1.3";
 const CHIAVE_API = "AIzaSyA3eA9-4n6jc6llgXn805Pus54awLbTxn0";          // Drive API (come Carica Mappe)
 const RADICE = "1Qss5yBi3WuEZ-LSkcJ1TjaKrd8QHeOuu";                     // Cartografia_cond sul Drive
 const MAIL = "toporescue@gmail.com";
@@ -265,6 +266,12 @@ const T = {
           "Votre compte est activé pour la copie locale. Vous pouvez ajouter le dossier partagé à Google Drive pour ordinateur et choisir quoi garder sur l'ordinateur. Bientôt le programme Estrazione Mappe permettra de télécharger par pays, région ou province, avec les voisines.",
           "Dein Konto ist für die lokale Kopie freigegeben. Du kannst den geteilten Ordner zu Google Drive für Desktop hinzufügen und wählen, was auf dem Computer bleibt. Bald erlaubt das Programm Estrazione Mappe den Download nach Land, Region oder Provinz, mit den Nachbarn.",
           "Tu cuenta está habilitada para la copia local. Puedes añadir la carpeta compartida a Google Drive para ordenador y elegir qué guardar en el ordenador. Pronto el programa Estrazione Mappe permitirá descargar por país, región o provincia, con las colindantes."],
+ loc_passi: [
+  "<li>Apri la cartella col pulsante qui sotto, collegato al tuo account Google (anche un Gmail personale).</li><li>Clic destro sulla cartella › <b>Organizza › Aggiungi scorciatoia</b> › <b>Il mio Drive</b>.</li><li>Installa <a href=\"https://www.google.com/drive/download/\" target=\"_blank\" rel=\"noopener\">Google Drive per desktop</a>: la cartella compare in «Il mio Drive».</li><li>Per averla sul disco anche senza internet: clic destro › <b>Disponibile offline</b> (o modalità <b>Mirroring</b>). Si aggiorna da sola; non occupa spazio del tuo account Google, solo del disco. La cartella è in sola lettura.</li>",
+  "<li>Open the folder with the button below, signed in to your Google account (a personal Gmail is fine).</li><li>Right-click the folder › <b>Organize › Add shortcut</b> › <b>My Drive</b>.</li><li>Install <a href=\"https://www.google.com/drive/download/\" target=\"_blank\" rel=\"noopener\">Google Drive for desktop</a>: the folder appears in «My Drive».</li><li>To keep it on disk for offline use: right-click › <b>Available offline</b> (or <b>Mirror</b> mode). It updates by itself; it uses disk space, not your Google storage. The folder is read-only.</li>",
+  "<li>Ouvrez le dossier avec le bouton ci-dessous, connecté à votre compte Google (un Gmail personnel suffit).</li><li>Clic droit sur le dossier › <b>Organiser › Ajouter un raccourci</b> › <b>Mon Drive</b>.</li><li>Installez <a href=\"https://www.google.com/drive/download/\" target=\"_blank\" rel=\"noopener\">Google Drive pour ordinateur</a> : le dossier apparaît dans «Mon Drive».</li><li>Pour le garder sur le disque hors ligne : clic droit › <b>Disponible hors connexion</b> (ou mode <b>Mise en miroir</b>). Il se met à jour tout seul ; il occupe le disque, pas votre stockage Google. Le dossier est en lecture seule.</li>",
+  "<li>Öffne den Ordner mit der Schaltfläche unten, angemeldet mit deinem Google-Konto (ein privates Gmail genügt).</li><li>Rechtsklick auf den Ordner › <b>Organisieren › Verknüpfung hinzufügen</b> › <b>Meine Ablage</b>.</li><li>Installiere <a href=\"https://www.google.com/drive/download/\" target=\"_blank\" rel=\"noopener\">Google Drive für den Desktop</a>: der Ordner erscheint in «Meine Ablage».</li><li>Um ihn offline auf der Festplatte zu haben: Rechtsklick › <b>Offline verfügbar</b> (oder Modus <b>Spiegeln</b>). Er aktualisiert sich selbst; er belegt die Festplatte, nicht deinen Google-Speicher. Der Ordner ist schreibgeschützt.</li>",
+  "<li>Abre la carpeta con el botón de abajo, con tu cuenta de Google (vale un Gmail personal).</li><li>Clic derecho en la carpeta › <b>Organizar › Añadir acceso directo</b> › <b>Mi unidad</b>.</li><li>Instala <a href=\"https://www.google.com/drive/download/\" target=\"_blank\" rel=\"noopener\">Google Drive para ordenador</a>: la carpeta aparece en «Mi unidad».</li><li>Para tenerla en el disco sin internet: clic derecho › <b>Disponible sin conexión</b> (o modo <b>Duplicar</b>). Se actualiza sola; ocupa disco, no tu almacenamiento de Google. La carpeta es de solo lectura.</li>"],
  loc_spazio: ["Attenzione allo spazio: la cartella completa occupa diverse centinaia di GB. Una regione con carta tecnica, terreno e mappe Garmin può superare i 30-40 GB: controlla lo spazio libero prima di scaricare.",
               "Mind the space: the full folder takes several hundred GB. One region with technical map, terrain and Garmin maps can exceed 30-40 GB: check free space before downloading.",
               "Attention à l'espace : le dossier complet occupe plusieurs centaines de Go. Une région avec carte technique, terrain et cartes Garmin peut dépasser 30-40 Go : vérifiez l'espace libre avant de télécharger.",
@@ -324,6 +331,9 @@ function traduci() {
 const $ = id => document.getElementById(id);
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
 const QUI = location.origin + location.pathname;
+// ?torna=/Carica_Mappe/... : dopo il login si torna alla pagina di lavoro da cui si e' arrivati (accesso.js)
+const TORNA = (() => { const v = new URLSearchParams(location.search).get("torna") || "";
+  return /^\/[A-Za-z0-9_]/.test(v) && !v.startsWith("//") && !v.startsWith("/TopoRescue") ? v : ""; })();
 let STATO = null, RECUPERO = /type=recovery/.test(location.hash);   // link "password dimenticata" della mail
 
 function mostra(v) {
@@ -365,6 +375,7 @@ async function entrato(sessione) {
     "\n\nReferente del gruppo (nome e telefono o email):\n\nMotivo della richiesta:\n";
   $("b-richiedi").href = "mailto:" + MAIL + "?subject=" + encodeURIComponent("Richiesta abilitazione copia locale – " + u.email) + "&body=" + encodeURIComponent(corpo);
   aggiornaBadge();
+  if (TORNA) { location.replace(TORNA); return; }
   const so = /Windows/.test(navigator.userAgent) ? "win" : /Mac/.test(navigator.userAgent) ? "mac" : null;
   if (so) scegliSO(so);
   mostra("menu");
