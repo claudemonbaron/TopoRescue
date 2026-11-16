@@ -154,6 +154,7 @@ code { font: .88em var(--f-mono) }
     <label class="check"><input type="checkbox" id="a-estr" checked><span data-t="app_estr"></span></label>
     <label class="check"><input type="checkbox" id="a-car" checked><span data-t="app_car"></span></label>
     <button class="btn" id="b-scarica" disabled data-t="scarica_app"></button>
+    <p class="msg" id="scarica-stato" hidden></p>
     <div id="ist-mac" hidden><ol class="ist" data-t="ist_mac"></ol></div>
     <div id="ist-win" hidden><ol class="ist" data-t="ist_win"></ol></div>
   </section>
@@ -194,7 +195,7 @@ code { font: .88em var(--f-mono) }
 // ---------------------------------------------------------------- impostazioni
 const SUPA_URL = "https://xorshypftmrbtyhrchwy.supabase.co";
 const SUPA_KEY = "sb_publishable_SghE7Wz8rNWEUVVhSpmFew_IBDCCqvk";     // chiave pubblica: fatta per stare nelle pagine
-const VERSIONE = "1.1";
+const VERSIONE = "1.2";
 const CHIAVE_API = "AIzaSyA3eA9-4n6jc6llgXn805Pus54awLbTxn0";          // Drive API (come Carica Mappe)
 const RADICE = "1Qss5yBi3WuEZ-LSkcJ1TjaKrd8QHeOuu";                     // Cartografia_cond sul Drive
 const MAIL = "toporescue@gmail.com";
@@ -293,7 +294,8 @@ const T = {
  m_link: ["Se avevi già confermato, prova ad accedere; altrimenti accedi e premi «Rimanda la mail di conferma».", "If you had already confirmed, try signing in; otherwise sign in and press «Resend the confirmation email».", "Si vous aviez déjà confirmé, essayez de vous connecter ; sinon connectez-vous et appuyez sur «Renvoyer l'e-mail de confirmation».", "Falls du schon bestätigt hast, melde dich an; sonst melde dich an und drücke «Bestätigungs-E-Mail erneut senden».", "Si ya habías confirmado, intenta acceder; si no, accede y pulsa «Reenviar el correo de confirmación»."],
  m_errore: ["Qualcosa non è andato: ", "Something went wrong: ", "Une erreur s'est produite : ", "Etwas ist schiefgelaufen: ", "Algo ha fallado: "],
  m_troppe: ["Troppe richieste in poco tempo: riprova fra qualche minuto.", "Too many requests: try again in a few minutes.", "Trop de demandes : réessayez dans quelques minutes.", "Zu viele Anfragen: in ein paar Minuten erneut versuchen.", "Demasiadas solicitudes: inténtalo de nuevo en unos minutos."],
- m_scarico: ["Scaricamento avviato: controlla la cartella Download.", "Download started: check your Downloads folder.", "Téléchargement lancé : vérifiez le dossier Téléchargements.", "Download gestartet: prüfe den Download-Ordner.", "Descarga iniciada: revisa la carpeta Descargas."],
+ m_scarico_in: ["Scarico", "Downloading", "Téléchargement de", "Lade", "Descargando"],
+ m_scarico: ["Fatto: i programmi sono nella cartella Download.", "Done: the programs are in your Downloads folder.", "Terminé : les programmes sont dans le dossier Téléchargements.", "Fertig: die Programme sind im Download-Ordner.", "Hecho: los programas están en la carpeta Descargas."],
  m_drive: ["Il Drive non risponde, riprova fra poco: ", "The Drive is not responding, try again shortly: ", "Le Drive ne répond pas, réessayez bientôt : ", "Das Drive antwortet nicht, bitte gleich erneut versuchen: ", "El Drive no responde, inténtalo en breve: "],
  // enti
  e_volontariato: ["Volontariato di protezione civile (ANA, gruppi comunali, unità cinofile…)", "Civil protection volunteers", "Bénévoles de protection civile", "Zivilschutz-Freiwillige", "Voluntariado de protección civil"],
@@ -387,25 +389,51 @@ async function elencoDrive(id) {
   if (!r.ok) throw new Error("Drive " + r.status);
   return (await r.json()).files || [];
 }
+// 1.2: i programmi si scaricano dalla pagina (Drive API con la chiave, come Carica Mappe) e si salvano col loro
+// nome. Il collegamento diretto di Drive mostrava per i .dmg/.exe la pagina "Google Drive non puo' eseguire la
+// scansione antivirus", che sostituiva questa pagina e fermava il secondo scaricamento.
+function statoScarica(testo, err) { const m = $("scarica-stato"); m.innerHTML = testo || ""; m.hidden = !testo; m.classList.toggle("err", !!err); }
+async function scaricaFile(f, n, tot) {
+  const urls = ["https://www.googleapis.com/download/drive/v3/files/" + f.id + "?alt=media&key=" + CHIAVE_API,
+                "https://www.googleapis.com/drive/v3/files/" + f.id + "?alt=media&key=" + CHIAVE_API];
+  let r = null, errore = null;
+  for (const u of urls) {
+    try { r = await fetch(u); if (r.ok) break; errore = new Error("Drive " + r.status); r = null; } catch (e) { errore = e; r = null; }
+  }
+  if (!r) throw errore || new Error("Drive");
+  const tutto = +f.size || +r.headers.get("content-length") || 0, pezzi = [];
+  let letti = 0;
+  const rd = r.body.getReader();
+  for (;;) {
+    const { done, value } = await rd.read();
+    if (done) break;
+    pezzi.push(value); letti += value.length;
+    statoScarica(t("m_scarico_in") + " <b>" + f.name.replace(/^_+/, "") + "</b> (" + n + "/" + tot + "): " +
+                 Math.round(letti / 1048576) + (tutto ? " / " + Math.round(tutto / 1048576) : "") + " MB");
+  }
+  const url = URL.createObjectURL(new Blob(pezzi, { type: "application/octet-stream" }));
+  const a = document.createElement("a");
+  a.href = url; a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 120000);
+}
 async function scaricaApp() {
   const est = SO === "mac" ? ".dmg" : ".exe";
   const voluti = [$("a-estr").checked && APP.estr, $("a-car").checked && APP.car].filter(Boolean).map(n => n + est);
   if (!voluti.length) return;
-  let cart;
-  try { cart = (await elencoDrive(RADICE)).find(f => f.name === "Estrazione_mappe"); if (!cart) throw new Error("Estrazione_mappe"); }
-  catch (e) { avvisa(t("m_drive") + e.message, true); return; }
-  const files = await elencoDrive(cart.id);
-  let n = 0;
-  for (const nome of voluti) {
-    const f = files.find(x => x.name === nome);
-    if (!f) continue;
-    const a = document.createElement("a");            // download diretto dal Drive, col nome del file
-    a.href = "https://drive.usercontent.google.com/download?id=" + f.id + "&export=download&confirm=t";
-    a.rel = "noopener"; document.body.appendChild(a); a.click(); a.remove(); n++;
-    await new Promise(ok => setTimeout(ok, 1500));    // i browser bloccano due download nello stesso istante
-  }
+  statoScarica(t("attendi"));
+  let files;
+  try {
+    const cart = (await elencoDrive(RADICE)).find(f => f.name === "Estrazione_mappe");
+    if (!cart) throw new Error("Estrazione_mappe");
+    files = await elencoDrive(cart.id);
+  } catch (e) { statoScarica(t("m_drive") + e.message, true); return; }
+  const trovati = voluti.map(nome => files.find(x => x.name === nome)).filter(Boolean);
+  if (!trovati.length) { statoScarica(t("m_drive") + voluti.join(", "), true); return; }
+  try {
+    for (let i = 0; i < trovati.length; i++) await scaricaFile(trovati[i], i + 1, trovati.length);
+  } catch (e) { statoScarica(t("m_drive") + e.message, true); return; }
   try { await sb.from("accessi").insert({ app: "scarica_" + SO, versione: VERSIONE, sistema: sistema() }); } catch (e) {}
-  avvisa(n ? t("m_scarico") : t("m_drive") + voluti.join(", "), !n);
+  statoScarica(t("m_scarico") + " " + trovati.map(f => f.name).join(", "));
 }
 
 // ---------------------------------------------------------------- moduli
