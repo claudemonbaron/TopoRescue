@@ -194,7 +194,7 @@ code { font: .88em var(--f-mono) }
 // ---------------------------------------------------------------- impostazioni
 const SUPA_URL = "https://xorshypftmrbtyhrchwy.supabase.co";
 const SUPA_KEY = "sb_publishable_SghE7Wz8rNWEUVVhSpmFew_IBDCCqvk";     // chiave pubblica: fatta per stare nelle pagine
-const VERSIONE = "1.0";
+const VERSIONE = "1.1";
 const CHIAVE_API = "AIzaSyA3eA9-4n6jc6llgXn805Pus54awLbTxn0";          // Drive API (come Carica Mappe)
 const RADICE = "1Qss5yBi3WuEZ-LSkcJ1TjaKrd8QHeOuu";                     // Cartografia_cond sul Drive
 const MAIL = "toporescue@gmail.com";
@@ -289,6 +289,8 @@ const T = {
  m_rec_ok: ["Se l'indirizzo è registrato, ti arriva una mail con il link per la password nuova.", "If the address is registered, you will receive an email with the link for the new password.", "Si l'adresse est enregistrée, vous recevrez un e-mail avec le lien pour le nouveau mot de passe.", "Wenn die Adresse registriert ist, bekommst du eine E-Mail mit dem Link für das neue Passwort.", "Si la dirección está registrada, recibirás un correo con el enlace para la contraseña nueva."],
  m_npw_ok: ["Password cambiata.", "Password changed.", "Mot de passe modifié.", "Passwort geändert.", "Contraseña cambiada."],
  m_bloccato: ["Il tuo account è sospeso. Per informazioni scrivi a " + MAIL + ".", "Your account is suspended. For information write to " + MAIL + ".", "Votre compte est suspendu. Pour information, écrivez à " + MAIL + ".", "Dein Konto ist gesperrt. Für Informationen schreibe an " + MAIL + ".", "Tu cuenta está suspendida. Para información escribe a " + MAIL + "."],
+ m_scaduto: ["Il link della mail è già stato usato o è scaduto.", "The email link has already been used or has expired.", "Le lien de l'e-mail a déjà été utilisé ou a expiré.", "Der Link in der E-Mail wurde bereits benutzt oder ist abgelaufen.", "El enlace del correo ya se usó o ha caducado."],
+ m_link: ["Se avevi già confermato, prova ad accedere; altrimenti accedi e premi «Rimanda la mail di conferma».", "If you had already confirmed, try signing in; otherwise sign in and press «Resend the confirmation email».", "Si vous aviez déjà confirmé, essayez de vous connecter ; sinon connectez-vous et appuyez sur «Renvoyer l'e-mail de confirmation».", "Falls du schon bestätigt hast, melde dich an; sonst melde dich an und drücke «Bestätigungs-E-Mail erneut senden».", "Si ya habías confirmado, intenta acceder; si no, accede y pulsa «Reenviar el correo de confirmación»."],
  m_errore: ["Qualcosa non è andato: ", "Something went wrong: ", "Une erreur s'est produite : ", "Etwas ist schiefgelaufen: ", "Algo ha fallado: "],
  m_troppe: ["Troppe richieste in poco tempo: riprova fra qualche minuto.", "Too many requests: try again in a few minutes.", "Trop de demandes : réessayez dans quelques minutes.", "Zu viele Anfragen: in ein paar Minuten erneut versuchen.", "Demasiadas solicitudes: inténtalo de nuevo en unos minutos."],
  m_scarico: ["Scaricamento avviato: controlla la cartella Download.", "Download started: check your Downloads folder.", "Téléchargement lancé : vérifiez le dossier Téléchargements.", "Download gestartet: prüfe den Download-Ordner.", "Descarga iniciada: revisa la carpeta Descargas."],
@@ -331,6 +333,7 @@ function errore(e) {
   const s = String((e && (e.message || e.error_description)) || e || "");
   if (/invalid login credentials/i.test(s)) return t("m_credenziali");
   if (/email not confirmed/i.test(s)) return t("m_non_confermata");
+  if (/link is invalid|has expired|otp_expired|token has expired/i.test(s)) return t("m_scaduto");
   if (/rate limit|too many|429/i.test(s)) return t("m_troppe");
   return t("m_errore") + s;
 }
@@ -461,15 +464,32 @@ traduci();
 // errore nel link della mail (scaduto o gia' usato): Supabase lo mette nell'indirizzo
 (function erroreLink() {
   const h = new URLSearchParams(location.hash.slice(1) || location.search.slice(1));
-  if (h.get("error_description")) { avvisa(t("m_errore") + h.get("error_description").replace(/\+/g, " "), true); history.replaceState(null, "", QUI); }
+  if (h.get("error_description")) { avvisa(errore(h.get("error_description").replace(/\+/g, " ")) + " " + t("m_link"), true); history.replaceState(null, "", QUI); }
 })();
 sb.auth.onAuthStateChange((evento, sessione) => {
   if (evento === "PASSWORD_RECOVERY") { RECUPERO = true; mostra("nuovapw"); }
 });
-sb.auth.getSession().then(({ data }) => {
-  if (RECUPERO) { mostra("nuovapw"); return; }
-  if (data.session) entrato(data.session); else mostra("login");
-});
+// Link delle mail con ?token_hash=...&type=email|recovery (modelli delle mail di Supabase): la verifica la fa la
+// pagina aperta da una persona. I controlli automatici dei servizi di posta, che aprono il link per vedere se e'
+// pericoloso, scaricano solo la pagina e non consumano il link (col link diretto di Supabase si', "link scaduto").
+async function verificaLink() {
+  const q = new URLSearchParams(location.search);
+  const th = q.get("token_hash"), tipo = q.get("type");
+  if (!th || !tipo) return false;
+  history.replaceState(null, "", QUI);
+  const { data, error } = await sb.auth.verifyOtp({ token_hash: th, type: tipo });
+  if (error) { avvisa(errore(error) + " " + t("m_link"), true); mostra("login"); return true; }
+  if (tipo === "recovery") { RECUPERO = true; mostra("nuovapw"); return true; }
+  if (data.session) await entrato(data.session); else mostra("login");
+  return true;
+}
+verificaLink().then(fatto => {
+  if (fatto) return;
+  sb.auth.getSession().then(({ data }) => {
+    if (RECUPERO) { mostra("nuovapw"); return; }
+    if (data.session) entrato(data.session); else mostra("login");
+  });
+}).catch(e => { avvisa(errore(e), true); mostra("login"); });
 </script>
 </body>
 </html>
