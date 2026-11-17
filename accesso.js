@@ -9,6 +9,7 @@
  * - Login fatto in TopoRescue: le pagine stanno sullo stesso sito (claudemonbaron.github.io), quindi lo vedono da sole.
  * - Senza login, o con l'account sospeso: si va a TopoRescue, che dopo il login riporta qui (?torna=...).
  * - Con login: una riga nel registro accessi (app = data-app) e, in alto a destra, nome e "Esci".
+ * - Dichiarazione di responsabilita' non accettata (17 nov): si va a TopoRescue ad accettarla, poi si torna qui.
  * - Se Supabase non risponde (rete assente, servizio fermo) la pagina si apre comunque: per il soccorso il lavoro
  *   non si blocca mai per colpa del controllo.
  */
@@ -18,6 +19,7 @@
   var SUPA_KEY = "sb_publishable_SghE7Wz8rNWEUVVhSpmFew_IBDCCqvk";
   var INGRESSO = "/TopoRescue/";
   var ATTESA_MAX = 8000;                       // ms: oltre, la pagina si apre comunque
+  var DICHIARAZIONE = "2026-11-17";            // 17 nov: versione della dichiarazione da accettare (come index.html)
   var me = document.currentScript;
   var APP = (me && me.getAttribute("data-app")) || "pagina_web";
 
@@ -61,6 +63,8 @@
       if (st.error) { apri(); return; }                          // Supabase non risponde: si lavora lo stesso
       var d = (st.data && st.data[0]) || {};
       if (d.bloccato) { sb.auth.signOut().finally(vaiIngresso); return; }
+      // 17 nov: dichiarazione di responsabilita' non ancora accettata -> la si accetta su TopoRescue, che poi riporta qui
+      if ("dichiarazione" in d && d.dichiarazione !== DICHIARAZIONE) { vaiIngresso(); return; }
       var u = navigator.userAgent;
       var sis = (/Windows/.test(u) ? "Windows" : /iPhone|iPad/.test(u) ? "iOS" : /Mac/.test(u) ? "Mac" : /Android/.test(u) ? "Android" : "altro") + " / browser";
       sb.from("accessi").insert({ app: APP, versione: "web", sistema: sis }).then(function () {}, function () {});

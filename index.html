@@ -77,7 +77,7 @@ section { background: color-mix(in srgb, var(--panel) 90%, transparent) }
 .col { display: flex; flex-direction: column; gap: 18px; min-width: 0 }
 @media (min-width: 1000px) {
   .wrap { max-width: 1180px }
-  #v-login, #v-registra, #v-recupero, #v-nuovapw, #msg, #v-attesa { width: 100%; max-width: 560px; align-self: center }
+  #v-login, #v-registra, #v-recupero, #v-nuovapw, #v-dichiarazione, #msg, #v-attesa { width: 100%; max-width: 560px; align-self: center }
   #v-menu:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start }
   #v-menu > .ciao { grid-column: 1 / -1 }
 }
@@ -155,6 +155,17 @@ section { background: color-mix(in srgb, var(--panel) 90%, transparent) }
 </section>
 
 <!-- ============ DOPO IL LOGIN ============ -->
+<!-- 17 nov: dichiarazione di responsabilita' da accettare al primo accesso (Supabase dichiarazione.sql) -->
+<section id="v-dichiarazione" class="stack" hidden>
+  <h2 style="margin:0" data-t="dich_t"></h2>
+  <p style="margin:0" data-t="dich_testo"></p>
+  <a class="btn sec" id="b-dich-leggi" target="_blank" rel="noopener" data-t="dich_leggi"></a>
+  <label class="check"><input type="checkbox" id="c-dich" disabled><span data-t="dich_check"></span></label>
+  <p class="sub" id="dich-prima" style="margin:0" data-t="dich_prima"></p>
+  <button class="btn" id="b-dich" disabled data-t="dich_accetta"></button>
+  <button class="link" id="b-dich-esci" data-t="esci"></button>
+</section>
+
 <div id="v-menu" class="stack" hidden>
   <section class="ciao"><div><span class="sub" data-t="benvenuto"></span><br><b id="m-nome"></b></div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px"><span class="badge" id="m-badge"></span>
@@ -222,7 +233,7 @@ section { background: color-mix(in srgb, var(--panel) 90%, transparent) }
 // ---------------------------------------------------------------- impostazioni
 const SUPA_URL = "https://xorshypftmrbtyhrchwy.supabase.co";
 const SUPA_KEY = "sb_publishable_SghE7Wz8rNWEUVVhSpmFew_IBDCCqvk";     // chiave pubblica: fatta per stare nelle pagine
-const VERSIONE = "1.4";   // 1.4 (17 nov): logo TopoRescue Maps nell'intestazione, favicon, schermata d'apertura
+const VERSIONE = "1.5";   // 1.5 (17 nov): dichiarazione di responsabilita' da accettare al primo accesso. 1.4 (17 nov): logo TopoRescue Maps nell'intestazione, favicon, schermata d'apertura
 const CHIAVE_API = "AIzaSyA3eA9-4n6jc6llgXn805Pus54awLbTxn0";          // Drive API (come Carica Mappe)
 const RADICE = "1Qss5yBi3WuEZ-LSkcJ1TjaKrd8QHeOuu";                     // Cartografia_cond sul Drive
 const MAIL = "toporescue@gmail.com";
@@ -287,6 +298,16 @@ const T = {
            "<li>Die heruntergeladene <code>.exe</code> an einen beliebigen Ort kopieren (z. B. Desktop) und doppelklicken: keine Installation nötig.</li><li>Erscheint Windows SmartScreen: <b>Weitere Informationen › Trotzdem ausführen</b>.</li><li>Beim ersten Start mit derselben E-Mail und demselben Passwort wie auf dieser Seite anmelden. Updates bietet das Programm selbst an.</li>",
            "<li>Copia el <code>.exe</code> descargado donde quieras (por ejemplo en el Escritorio) y ábrelo con doble clic: no hace falta instalarlo.</li><li>Si aparece Windows SmartScreen: <b>Más información › Ejecutar de todas formas</b>.</li><li>En el primer arranque accede con el mismo correo y contraseña de esta página. Las actualizaciones las propone el programa.</li>"],
  sez_locale: ["Mappe sul computer (senza internet)", "Maps on the computer (offline)", "Cartes sur l'ordinateur (hors ligne)", "Karten auf dem Computer (offline)", "Mapas en el ordenador (sin internet)"],
+ dich_t: ["Dichiarazione di responsabilità", "Disclaimer", "Décharge de responsabilité", "Haftungsausschluss", "Exención de responsabilidad"],
+ dich_testo: ["Prima di usare le mappe leggi e accetta la dichiarazione di responsabilità (una volta sola). In breve: le mappe sono una semplificazione delle carte tecniche e delle banche dati ufficiali (Regioni, Stati confinanti, ISTAT, OpenStreetMap), con dati dal 1979 al 2025; possono contenere inesattezze o non essere aggiornate. Sono messe a disposizione gratuitamente agli operatori della protezione civile; l'autore declina ogni responsabilità per inesattezze e per un uso improprio. Alcuni dati (Abruzzo, CC BY-NC) non possono essere usati a scopo commerciale. Fonti e licenze complete nel PDF.",
+   "Before using the maps, read and accept the disclaimer (only once). In short: the maps are a simplification of official technical maps and databases (Regions, neighbouring countries, ISTAT, OpenStreetMap), with data from 1979 to 2025; they may contain errors or be out of date. They are provided free of charge to civil protection operators; the author accepts no liability for errors or improper use. Some data (Abruzzo, CC BY-NC) may not be used commercially. Full sources and licences in the PDF.",
+   "Avant d'utiliser les cartes, lisez et acceptez la décharge de responsabilité (une seule fois). En bref : les cartes sont une simplification des cartes techniques et bases de données officielles (Régions, pays voisins, ISTAT, OpenStreetMap), avec des données de 1979 à 2025 ; elles peuvent contenir des erreurs ou ne pas être à jour. Elles sont mises gratuitement à disposition des opérateurs de la protection civile ; l'auteur décline toute responsabilité pour les erreurs et un usage impropre. Certaines données (Abruzzes, CC BY-NC) ne peuvent pas être utilisées à des fins commerciales. Sources et licences complètes dans le PDF.",
+   "Bevor Sie die Karten verwenden, lesen und akzeptieren Sie den Haftungsausschluss (nur einmal). Kurz: die Karten sind eine Vereinfachung amtlicher technischer Karten und Datenbanken (Regionen, Nachbarländer, ISTAT, OpenStreetMap) mit Daten von 1979 bis 2025; sie können Fehler enthalten oder veraltet sein. Sie werden Einsatzkräften des Zivilschutzes kostenlos zur Verfügung gestellt; der Autor haftet nicht für Fehler oder unsachgemäße Nutzung. Einige Daten (Abruzzen, CC BY-NC) dürfen nicht kommerziell genutzt werden. Vollständige Quellen und Lizenzen im PDF.",
+   "Antes de usar los mapas, lee y acepta la exención de responsabilidad (una sola vez). En resumen: los mapas son una simplificación de la cartografía técnica y las bases de datos oficiales (Regiones, países limítrofes, ISTAT, OpenStreetMap), con datos de 1979 a 2025; pueden contener errores o no estar actualizados. Se ponen a disposición gratuitamente de los operadores de protección civil; el autor declina toda responsabilidad por errores y por un uso indebido. Algunos datos (Abruzos, CC BY-NC) no pueden usarse con fines comerciales. Fuentes y licencias completas en el PDF."],
+ dich_leggi: ["Leggi la dichiarazione completa (PDF)", "Read the full disclaimer (PDF)", "Lire la décharge complète (PDF)", "Vollständigen Haftungsausschluss lesen (PDF)", "Leer la exención completa (PDF)"],
+ dich_check: ["Ho letto e accetto la dichiarazione di responsabilità", "I have read and accept the disclaimer", "J'ai lu et j'accepte la décharge de responsabilité", "Ich habe den Haftungsausschluss gelesen und akzeptiere ihn", "He leído y acepto la exención de responsabilidad"],
+ dich_prima: ["La casella si attiva dopo aver aperto il PDF.", "The box is enabled after opening the PDF.", "La case s'active après avoir ouvert le PDF.", "Das Kästchen wird nach dem Öffnen des PDF aktiv.", "La casilla se activa tras abrir el PDF."],
+ dich_accetta: ["Accetto e continuo", "Accept and continue", "J'accepte et je continue", "Akzeptieren und weiter", "Acepto y continúo"],
  loc_si: ["Il tuo account è abilitato alla copia locale. Il modo più semplice: nei programmi Estrarre Mappe e Carica Mappe premi «Mappe sul computer...», scegli paese, regione o provincia (le confinanti si aggiungono da sole) e la copia si scarica da sola; poi i programmi lavorano senza internet e controllano gli aggiornamenti. In alternativa puoi aggiungere tutta la cartella condivisa a Google Drive per desktop:",
             "Your account is authorised for the local copy. The easiest way: in the Estrarre Mappe and Carica Mappe programs press «Mappe sul computer...» (Maps on this computer), choose a country, region or province (neighbours are added automatically) and the copy downloads by itself; the programs then work without internet and check for updates. Alternatively you can add the whole shared folder to Google Drive for desktop:",
             "Votre compte est habilité à la copie locale. Le plus simple : dans les programmes Estrarre Mappe et Carica Mappe, appuyez sur «Mappe sul computer...» (Cartes sur l'ordinateur), choisissez un pays, une région ou une province (les voisines s'ajoutent toutes seules) et la copie se télécharge d'elle-même ; ensuite les programmes fonctionnent sans internet et vérifient les mises à jour. Sinon vous pouvez ajouter tout le dossier partagé à Google Drive pour ordinateur :",
@@ -360,10 +381,11 @@ const QUI = location.origin + location.pathname;
 // ?torna=/Carica_Mappe/... : dopo il login si torna alla pagina di lavoro da cui si e' arrivati (accesso.js)
 const TORNA = (() => { const v = new URLSearchParams(location.search).get("torna") || "";
   return /^\/[A-Za-z0-9_]/.test(v) && !v.startsWith("//") && !v.startsWith("/TopoRescue") ? v : ""; })();
+const DICHIARAZIONE = "2026-11-17";   // 17 nov: versione della dichiarazione (uguale in accesso.js e accesso_app.py)
 let STATO = null, RECUPERO = /type=recovery/.test(location.hash);   // link "password dimenticata" della mail
 
 function mostra(v) {
-  ["login", "registra", "recupero", "nuovapw", "menu", "attesa"].forEach(x => { $("v-" + x).hidden = x !== v; });
+  ["login", "registra", "recupero", "nuovapw", "menu", "attesa", "dichiarazione"].forEach(x => { $("v-" + x).hidden = x !== v; });
   if (v !== "menu") window.scrollTo(0, 0);
 }
 function avvisa(testo, errore) { const m = $("msg"); m.textContent = testo || ""; m.hidden = !testo; m.classList.toggle("err", !!errore); }
@@ -391,6 +413,20 @@ async function entrato(sessione) {
   if (error) { avvisa(errore(error), true); mostra("login"); return; }
   STATO = (data && data[0]) || { autorizzato: false, bloccato: false, nome: "" };
   if (STATO.bloccato) { await sb.auth.signOut(); avvisa(t("m_bloccato"), true); mostra("login"); return; }
+  // 17 nov: dichiarazione di responsabilita' da accettare (una volta, poi a ogni nuova versione)
+  if ("dichiarazione" in STATO && STATO.dichiarazione !== DICHIARAZIONE) {
+    $("b-dich-leggi").href = "https://claudemonbaron.github.io/Carica_Mappe/istruzioni_" + LINGUA + ".pdf";
+    $("c-dich").checked = false; $("c-dich").disabled = true; $("b-dich").disabled = true; $("dich-prima").hidden = false;
+    $("b-dich-leggi").onclick = () => { $("c-dich").disabled = false; $("dich-prima").hidden = true; };
+    $("c-dich").onchange = () => { $("b-dich").disabled = !$("c-dich").checked; };
+    $("b-dich").onclick = () => occupato($("b-dich"), async () => {
+      const r = await sb.rpc("accetta_dichiarazione", { versione: DICHIARAZIONE });
+      if (r.error) throw r.error;
+      await entrato(sessione);
+    });
+    $("b-dich-esci").onclick = async () => { await sb.auth.signOut(); mostra("login"); };
+    mostra("dichiarazione"); return;
+  }
   try { await sb.from("accessi").insert({ app: "ingresso", versione: VERSIONE, sistema: sistema() }); } catch (e) {}
   const u = sessione.user, md = u.user_metadata || {};
   $("m-nome").textContent = [STATO.nome || md.nome, md.cognome].filter(Boolean).join(" ") || u.email;
