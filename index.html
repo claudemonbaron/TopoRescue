@@ -72,6 +72,15 @@ img.logo { width: 64px; height: 64px; flex: none }
 body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1; opacity: .06;
   background: url("toporescue_filigrana.png") center 55% / min(72vmin, 620px) no-repeat }
 section { background: color-mix(in srgb, var(--panel) 90%, transparent) }
+/* 17 nov: schermi larghi -> dopo il login due colonne (pagine web + istruzioni | programmi + mappe sul computer);
+   i moduli di accesso restano stretti e centrati */
+.col { display: flex; flex-direction: column; gap: 18px; min-width: 0 }
+@media (min-width: 1000px) {
+  .wrap { max-width: 1180px }
+  #v-login, #v-registra, #v-recupero, #v-nuovapw, #msg, #v-attesa { width: 100%; max-width: 560px; align-self: center }
+  #v-menu:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start }
+  #v-menu > .ciao { grid-column: 1 / -1 }
+}
 </style>
 <link rel="icon" href="favicon.ico" sizes="any"><link rel="icon" href="toporescue_icona.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="toporescue_icona_192.png">
 </head>
@@ -151,6 +160,7 @@ section { background: color-mix(in srgb, var(--panel) 90%, transparent) }
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px"><span class="badge" id="m-badge"></span>
     <button class="link" id="b-esci" data-t="esci"></button></div></section>
 
+  <div class="col">
   <section>
     <h2 data-t="sez_web"></h2>
     <div class="scelta">
@@ -159,6 +169,15 @@ section { background: color-mix(in srgb, var(--panel) 90%, transparent) }
     </div>
   </section>
 
+  <section>
+    <h2 data-t="sez_istr"></h2>
+    <div class="scelta">
+      <a data-pdf="https://claudemonbaron.github.io/Carica_Mappe/istruzioni" target="_blank" rel="noopener"><b data-t="carica"></b><small>PDF</small></a>
+      <a data-pdf="https://claudemonbaron.github.io/Carica_Mappe/estrazione/istruzioni" target="_blank" rel="noopener"><b data-t="estrai"></b><small>PDF</small></a>
+    </div>
+  </section>
+  </div>
+  <div class="col">
   <section class="stack">
     <h2 style="margin:0" data-t="sez_app"></h2>
     <div class="scelta" id="so">
@@ -186,14 +205,7 @@ section { background: color-mix(in srgb, var(--panel) 90%, transparent) }
       <a class="btn sec" id="b-richiedi" data-t="richiedi"></a>
     </div>
   </section>
-
-  <section>
-    <h2 data-t="sez_istr"></h2>
-    <div class="scelta">
-      <a data-pdf="https://claudemonbaron.github.io/Carica_Mappe/istruzioni" target="_blank" rel="noopener"><b data-t="carica"></b><small>PDF</small></a>
-      <a data-pdf="https://claudemonbaron.github.io/Carica_Mappe/estrazione/istruzioni" target="_blank" rel="noopener"><b data-t="estrai"></b><small>PDF</small></a>
-    </div>
-  </section>
+  </div>
 </div>
 
 <p class="sub" id="v-attesa" style="text-align:center" data-t="attendi"></p>
@@ -275,11 +287,11 @@ const T = {
            "<li>Die heruntergeladene <code>.exe</code> an einen beliebigen Ort kopieren (z. B. Desktop) und doppelklicken: keine Installation nötig.</li><li>Erscheint Windows SmartScreen: <b>Weitere Informationen › Trotzdem ausführen</b>.</li><li>Beim ersten Start mit derselben E-Mail und demselben Passwort wie auf dieser Seite anmelden. Updates bietet das Programm selbst an.</li>",
            "<li>Copia el <code>.exe</code> descargado donde quieras (por ejemplo en el Escritorio) y ábrelo con doble clic: no hace falta instalarlo.</li><li>Si aparece Windows SmartScreen: <b>Más información › Ejecutar de todas formas</b>.</li><li>En el primer arranque accede con el mismo correo y contraseña de esta página. Las actualizaciones las propone el programa.</li>"],
  sez_locale: ["Mappe sul computer (senza internet)", "Maps on the computer (offline)", "Cartes sur l'ordinateur (hors ligne)", "Karten auf dem Computer (offline)", "Mapas en el ordenador (sin internet)"],
- loc_si: ["Il tuo account è abilitato alla copia locale. Puoi aggiungere la cartella condivisa a Google Drive per desktop e scegliere cosa tenere sul computer. Presto il programma Estrazione Mappe permetterà di scaricare per paese, regione o provincia, con le confinanti.",
-          "Your account is enabled for the local copy. You can add the shared folder to Google Drive for desktop and choose what to keep on the computer. Soon the Estrazione Mappe program will let you download by country, region or province, with neighbours.",
-          "Votre compte est activé pour la copie locale. Vous pouvez ajouter le dossier partagé à Google Drive pour ordinateur et choisir quoi garder sur l'ordinateur. Bientôt le programme Estrazione Mappe permettra de télécharger par pays, région ou province, avec les voisines.",
-          "Dein Konto ist für die lokale Kopie freigegeben. Du kannst den geteilten Ordner zu Google Drive für Desktop hinzufügen und wählen, was auf dem Computer bleibt. Bald erlaubt das Programm Estrazione Mappe den Download nach Land, Region oder Provinz, mit den Nachbarn.",
-          "Tu cuenta está habilitada para la copia local. Puedes añadir la carpeta compartida a Google Drive para ordenador y elegir qué guardar en el ordenador. Pronto el programa Estrazione Mappe permitirá descargar por país, región o provincia, con las colindantes."],
+ loc_si: ["Il tuo account è abilitato alla copia locale. Il modo più semplice: nei programmi Estrarre Mappe e Carica Mappe premi «Mappe sul computer...», scegli paese, regione o provincia (le confinanti si aggiungono da sole) e la copia si scarica da sola; poi i programmi lavorano senza internet e controllano gli aggiornamenti. In alternativa puoi aggiungere tutta la cartella condivisa a Google Drive per desktop:",
+            "Your account is authorised for the local copy. The easiest way: in the Estrarre Mappe and Carica Mappe programs press «Mappe sul computer...» (Maps on this computer), choose a country, region or province (neighbours are added automatically) and the copy downloads by itself; the programs then work without internet and check for updates. Alternatively you can add the whole shared folder to Google Drive for desktop:",
+            "Votre compte est habilité à la copie locale. Le plus simple : dans les programmes Estrarre Mappe et Carica Mappe, appuyez sur «Mappe sul computer...» (Cartes sur l'ordinateur), choisissez un pays, une région ou une province (les voisines s'ajoutent toutes seules) et la copie se télécharge d'elle-même ; ensuite les programmes fonctionnent sans internet et vérifient les mises à jour. Sinon vous pouvez ajouter tout le dossier partagé à Google Drive pour ordinateur :",
+            "Ihr Konto ist für die lokale Kopie freigegeben. Am einfachsten: in den Programmen Estrarre Mappe und Carica Mappe auf «Mappe sul computer...» (Karten auf dem Computer) drücken, Land, Region oder Provinz wählen (Nachbarn kommen von selbst dazu), und die Kopie lädt sich selbst; danach arbeiten die Programme ohne Internet und prüfen Updates. Alternativ können Sie den ganzen geteilten Ordner zu Google Drive für Desktop hinzufügen:",
+            "Tu cuenta está habilitada para la copia local. Lo más sencillo: en los programas Estrarre Mappe y Carica Mappe pulsa «Mappe sul computer...» (Mapas en el ordenador), elige país, región o provincia (las limítrofes se añaden solas) y la copia se descarga sola; después los programas funcionan sin internet y comprueban las actualizaciones. Como alternativa puedes añadir toda la carpeta compartida a Google Drive para ordenador:"],
  loc_passi: [
   "<li>Apri la cartella col pulsante qui sotto, collegato al tuo account Google (anche un Gmail personale).</li><li>Clic destro sulla cartella › <b>Organizza › Aggiungi scorciatoia</b> › <b>Il mio Drive</b>.</li><li>Installa <a href=\"https://www.google.com/drive/download/\" target=\"_blank\" rel=\"noopener\">Google Drive per desktop</a>: la cartella compare in «Il mio Drive».</li><li>Per averla sul disco anche senza internet: clic destro › <b>Disponibile offline</b> (o modalità <b>Mirroring</b>). Si aggiorna da sola; non occupa spazio del tuo account Google, solo del disco. La cartella è in sola lettura.</li>",
   "<li>Open the folder with the button below, signed in to your Google account (a personal Gmail is fine).</li><li>Right-click the folder › <b>Organize › Add shortcut</b> › <b>My Drive</b>.</li><li>Install <a href=\"https://www.google.com/drive/download/\" target=\"_blank\" rel=\"noopener\">Google Drive for desktop</a>: the folder appears in «My Drive».</li><li>To keep it on disk for offline use: right-click › <b>Available offline</b> (or <b>Mirror</b> mode). It updates by itself; it uses disk space, not your Google storage. The folder is read-only.</li>",
