@@ -51,6 +51,8 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1p
 .msg { border-left: 3px solid var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); padding: 9px 11px; border-radius: 4px; font-size: .93rem; margin: 0 }
 .msg.err { border-color: var(--warn); background: var(--accent-soft) }
 .scelta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+.scelta.tre { grid-template-columns: 1fr 1fr 1fr }
+.nota { margin: 0; color: var(--muted); font-size: .85rem }
 .scelta a, .scelta button { display: flex; flex-direction: column; gap: 4px; padding: 14px; border: 1px solid var(--line); border-radius: 9px;
   background: var(--bg); color: var(--fg); text-decoration: none; cursor: pointer; font: inherit; text-align: left; min-width: 0 }
 .scelta a:hover, .scelta button:hover, .scelta [aria-pressed=true] { border-color: var(--accent); background: var(--accent-soft) }
@@ -66,7 +68,7 @@ ol.ist { margin: 0; padding-left: 20px; font-size: .93rem } ol.ist li + li { mar
 .piede a { color: var(--muted) }
 select.lingua { width: auto; padding: 6px 8px; font-size: .9rem }
 code { font: .88em var(--f-mono) }
-@media (max-width: 420px) { .grid2, .scelta { grid-template-columns: 1fr } }
+@media (max-width: 420px) { .grid2, .scelta, .scelta.tre { grid-template-columns: 1fr } }
 img.logo { width: 64px; height: 64px; flex: none }
 /* 17 nov: logo TopoRescue in filigrana sullo sfondo (fisso, tenue); riquadri appena trasparenti */
 body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1; opacity: .06;
@@ -191,10 +193,12 @@ section { background: color-mix(in srgb, var(--panel) 90%, transparent) }
   <div class="col">
   <section class="stack">
     <h2 style="margin:0" data-t="sez_app"></h2>
-    <div class="scelta" id="so">
+    <div class="scelta tre" id="so">
       <button type="button" data-so="mac" aria-pressed="false"><b>Mac</b><small data-t="mac_d"></small></button>
+      <button type="button" data-so="macintel" aria-pressed="false"><b>Mac Intel</b><small data-t="macintel_d"></small></button>
       <button type="button" data-so="win" aria-pressed="false"><b>Windows</b><small data-t="win_d"></small></button>
     </div>
+    <p class="nota" data-t="quale_mac"></p>
     <label class="check"><input type="checkbox" id="a-estr" checked><span data-t="app_estr"></span></label>
     <label class="check"><input type="checkbox" id="a-car" checked><span data-t="app_car"></span></label>
     <button class="btn" id="b-scarica" disabled data-t="scarica_app"></button>
@@ -233,7 +237,7 @@ section { background: color-mix(in srgb, var(--panel) 90%, transparent) }
 // ---------------------------------------------------------------- impostazioni
 const SUPA_URL = "https://xorshypftmrbtyhrchwy.supabase.co";
 const SUPA_KEY = "sb_publishable_SghE7Wz8rNWEUVVhSpmFew_IBDCCqvk";     // chiave pubblica: fatta per stare nelle pagine
-const VERSIONE = "1.5";   // 1.5 (17 nov): dichiarazione di responsabilita' da accettare al primo accesso. 1.4 (17 nov): logo TopoRescue Maps nell'intestazione, favicon, schermata d'apertura
+const VERSIONE = "1.6";   // 1.6 (17 nov): pulsante Mac Intel (dmg _Intel) e come capire che Mac si ha. 1.5 (17 nov): dichiarazione di responsabilita' da accettare al primo accesso. 1.4 (17 nov): logo TopoRescue Maps nell'intestazione, favicon, schermata d'apertura
 const CHIAVE_API = "AIzaSyA3eA9-4n6jc6llgXn805Pus54awLbTxn0";          // Drive API (come Carica Mappe)
 const RADICE = "1Qss5yBi3WuEZ-LSkcJ1TjaKrd8QHeOuu";                     // Cartografia_cond sul Drive
 const MAIL = "toporescue@gmail.com";
@@ -281,7 +285,13 @@ const T = {
  estrai: ["Lavora sulle mappe", "Work on the maps", "Travailler sur les cartes", "Mit den Karten arbeiten", "Trabajar con los mapas"],
  estrai_d: ["Carta tecnica in DXF, GeoPackage, progetti QGIS", "Technical map in DXF, GeoPackage, QGIS projects", "Carte technique en DXF, GeoPackage, projets QGIS", "Technische Karte in DXF, GeoPackage, QGIS-Projekte", "Cartografía técnica en DXF, GeoPackage, proyectos QGIS"],
  sez_app: ["Programmi per il computer", "Programs for the computer", "Programmes pour l'ordinateur", "Programme für den Computer", "Programas para el ordenador"],
- mac_d: ["chip Apple M1–M4", "Apple chip M1–M4", "puce Apple M1–M4", "Apple-Chip M1–M4", "chip Apple M1–M4"],
+ mac_d: ["chip Apple (M1 e successivi)", "Apple chip (M1 and later)", "puce Apple (M1 et suivantes)", "Apple-Chip (M1 und neuer)", "chip Apple (M1 y posteriores)"],
+ macintel_d: ["processore Intel, macOS 10.15 o più recente", "Intel processor, macOS 10.15 or later", "processeur Intel, macOS 10.15 ou plus récent", "Intel-Prozessor, macOS 10.15 oder neuer", "procesador Intel, macOS 10.15 o posterior"],
+ quale_mac: ["Che Mac hai? Menu  › <b>Informazioni su questo Mac</b>: se c'è scritto <b>Chip</b> Apple M… scegli <b>Mac</b>; se c'è scritto <b>Processore</b> … Intel scegli <b>Mac Intel</b>.",
+             "Which Mac do you have? Menu  › <b>About This Mac</b>: if it says <b>Chip</b> Apple M… choose <b>Mac</b>; if it says <b>Processor</b> … Intel choose <b>Mac Intel</b>.",
+             "Quel Mac avez-vous ? Menu  › <b>À propos de ce Mac</b> : s'il est écrit <b>Puce</b> Apple M… choisir <b>Mac</b> ; s'il est écrit <b>Processeur</b> … Intel choisir <b>Mac Intel</b>.",
+             "Welcher Mac? Menü  › <b>Über diesen Mac</b>: steht dort <b>Chip</b> Apple M…, <b>Mac</b> wählen; steht dort <b>Prozessor</b> … Intel, <b>Mac Intel</b> wählen.",
+             "¿Qué Mac tienes? Menú  › <b>Acerca de este Mac</b>: si pone <b>Chip</b> Apple M… elige <b>Mac</b>; si pone <b>Procesador</b> … Intel elige <b>Mac Intel</b>."],
  win_d: ["Windows 10 e 11", "Windows 10 and 11", "Windows 10 et 11", "Windows 10 und 11", "Windows 10 y 11"],
  app_estr: ["Estrazione Mappe – DXF, QGIS, Global Mapper, anche senza internet", "Estrazione Mappe – DXF, QGIS, Global Mapper, also offline", "Estrazione Mappe – DXF, QGIS, Global Mapper, aussi hors ligne", "Estrazione Mappe – DXF, QGIS, Global Mapper, auch offline", "Estrazione Mappe – DXF, QGIS, Global Mapper, también sin internet"],
  app_car: ["Carica Mappe – mappe Garmin nel GPS e in QMapShack", "Carica Mappe – Garmin maps to the GPS and QMapShack", "Carica Mappe – cartes Garmin dans le GPS et QMapShack", "Carica Mappe – Garmin-Karten auf das GPS und in QMapShack", "Carica Mappe – mapas Garmin al GPS y a QMapShack"],
@@ -452,7 +462,7 @@ let SO = null;
 function scegliSO(s) {
   SO = s;
   document.querySelectorAll("#so [data-so]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.so === s)));
-  $("ist-mac").hidden = s !== "mac"; $("ist-win").hidden = s !== "win";
+  $("ist-mac").hidden = s !== "mac" && s !== "macintel"; $("ist-win").hidden = s !== "win";
   $("b-scarica").disabled = false;
 }
 async function elencoDrive(id) {
@@ -490,7 +500,7 @@ async function scaricaFile(f, n, tot) {
   setTimeout(() => URL.revokeObjectURL(url), 120000);
 }
 async function scaricaApp() {
-  const est = SO === "mac" ? ".dmg" : ".exe";
+  const est = SO === "mac" ? ".dmg" : SO === "macintel" ? "_Intel.dmg" : ".exe";   // 1.6: Mac Intel -> ____..._Intel.dmg
   const voluti = [$("a-estr").checked && APP.estr, $("a-car").checked && APP.car].filter(Boolean).map(n => n + est);
   if (!voluti.length) return;
   statoScarica(t("attendi"));
