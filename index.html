@@ -3,8 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>TopoRescue – mappe per il soccorso</title>
-<meta name="description" content="Accesso alle mappe CTRN per GPS Garmin, CAD e GIS degli operatori di soccorso e protezione civile.">
+<title>TopoRescue Maps – mappe topografiche 1:5000 per GPS Garmin, AutoCAD e QGIS per il soccorso e la protezione civile</title>
+<meta name="description" content="Mappe topografiche gratuite dalla carta tecnica regionale 1:5000 per GPS Garmin, AutoCAD (DXF), QGIS e 3D, per il soccorso e la protezione civile: tutta Italia, Svizzera, Austria, Slovenia e Francia di confine. Registrazione gratuita per gli operatori.">
+<link rel="canonical" href="https://claudemonbaron.github.io/TopoRescue/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="TopoRescue Maps – mappe topografiche per il soccorso">
+<meta property="og:description" content="Carta tecnica 1:5000 per GPS Garmin, AutoCAD, QGIS e 3D, gratuita per soccorso e protezione civile.">
+<meta property="og:url" content="https://claudemonbaron.github.io/TopoRescue/">
+<meta property="og:image" content="https://claudemonbaron.github.io/TopoRescue/toporescue_apertura.png">
+<meta property="og:locale" content="it_IT">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "WebSite", "name": "TopoRescue Maps", "url": "https://claudemonbaron.github.io/TopoRescue/",
+ "inLanguage": ["it", "en", "fr", "de", "es"],
+ "description": "Mappe topografiche dalla carta tecnica regionale 1:5000 per GPS Garmin, AutoCAD (DXF), QGIS e 3D, gratuite per il soccorso e la protezione civile.",
+ "author": {"@type": "Person", "name": "Claude René Monbaron"}}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -225,7 +238,7 @@ section { background: color-mix(in srgb, var(--panel) 90%, transparent) }
 <p class="sub" id="v-attesa" style="text-align:center" data-t="attendi"></p>
 
 <footer class="piede">
-  <span><a href="privacy.html" data-t="privacy"></a> · <a href="mailto:toporescue@gmail.com">toporescue@gmail.com</a></span>
+  <span><a href="mappe.html" data-t="cosa_offre">Mappe topografiche: cosa offre TopoRescue</a> · <a href="privacy.html" data-t="privacy"></a> · <a href="mailto:toporescue@gmail.com">toporescue@gmail.com</a></span>
   <span data-t="gratis"></span>
 </footer>
 </div>
@@ -245,6 +258,7 @@ const ENTI = ["volontariato", "cnsas", "vvf", "cri", "pubblico", "altro", "priva
 // ---------------------------------------------------------------- testi (IT EN FR DE ES)
 const LINGUE = [["it", "Italiano"], ["en", "English"], ["fr", "Français"], ["de", "Deutsch"], ["es", "Español"]];
 const T = {
+ cosa_offre: ["Mappe topografiche: cosa offre TopoRescue", "Topographic maps: what TopoRescue offers", "Cartes topographiques : ce que propose TopoRescue", "Topografische Karten: was TopoRescue bietet", "Mapas topográficos: qué ofrece TopoRescue"],
  sottotitolo: ["Mappe per il soccorso e la protezione civile", "Maps for rescue and civil protection", "Cartes pour le secours et la protection civile", "Karten für Rettung und Zivilschutz", "Mapas para el rescate y la protección civil"],
  accedi: ["Accedi", "Sign in", "Connexion", "Anmelden", "Acceder"],
  email: ["Email", "Email", "E-mail", "E-Mail", "Correo electrónico"],
@@ -375,6 +389,8 @@ const t = k => { const r = T[k]; return r ? (r[IDX(LINGUA)] || r[0]) : k; };
 function traduci() {
   document.documentElement.lang = LINGUA;
   document.querySelectorAll("[data-t]").forEach(e => { e.innerHTML = t(e.dataset.t); });
+  const pm = document.querySelector('a[data-t="cosa_offre"]');                  // pagina pubblica nella lingua scelta
+  if (pm) pm.href = LINGUA === "it" ? "mappe.html" : "mappe-" + LINGUA + ".html";
   document.querySelectorAll("[data-pdf]").forEach(e => { e.href = e.dataset.pdf + "_" + LINGUA + ".pdf"; });
   const s = $("r-ente"), v = s.value;
   s.innerHTML = '<option value="" disabled selected>–</option>' + ENTI.map(k => '<option value="' + k + '">' + t("e_" + k) + "</option>").join("");
