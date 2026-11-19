@@ -498,8 +498,7 @@ async function elencoDrive(id) {
 // scansione antivirus", che sostituiva questa pagina e fermava il secondo scaricamento.
 function statoScarica(testo, err) { const m = $("scarica-stato"); m.innerHTML = testo || ""; m.hidden = !testo; m.classList.toggle("err", !!err); }
 async function scaricaFile(f, n, tot) {
-  const urls = ["https://www.googleapis.com/download/drive/v3/files/" + f.id + "?alt=media",
-                "https://www.googleapis.com/drive/v3/files/" + f.id + "?alt=media"];
+  const urls = ["https://www.googleapis.com/drive/v3/files/" + f.id + "?alt=media&supportsAllDrives=true"];   // 1.7: col permesso solo questo passa (CORS)
   let r = null, errore = null;
   const aut = { Authorization: "Bearer " + (await permesso()).token };
   for (const u of urls) {
