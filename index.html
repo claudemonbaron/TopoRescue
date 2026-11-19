@@ -211,9 +211,8 @@ section { background: color-mix(in srgb, var(--panel) 90%, transparent) }
     <h2 style="margin:0" data-t="sez_locale"></h2>
     <div id="loc-si" class="stack" hidden>
       <p style="margin:0" data-t="loc_si"></p>
-      <ol class="ist" data-t="loc_passi"></ol>
+      <!-- 1.7: con il Drive privato non si aggiunge piu' la cartella a Google Drive per desktop (loc_passi, loc_drive tolti) -->
       <p class="msg err" style="margin:0" data-t="loc_spazio"></p>
-      <a class="btn sec" id="b-drive" target="_blank" rel="noopener" data-t="loc_drive"></a>
     </div>
     <div id="loc-no" class="stack" hidden>
       <p style="margin:0" data-t="loc_no"></p>
@@ -237,9 +236,8 @@ section { background: color-mix(in srgb, var(--panel) 90%, transparent) }
 // ---------------------------------------------------------------- impostazioni
 const SUPA_URL = "https://xorshypftmrbtyhrchwy.supabase.co";
 const SUPA_KEY = "sb_publishable_SghE7Wz8rNWEUVVhSpmFew_IBDCCqvk";     // chiave pubblica: fatta per stare nelle pagine
-const VERSIONE = "1.6";   // 1.6 (17 nov): pulsante Mac Intel (dmg _Intel) e come capire che Mac si ha. 1.5 (17 nov): dichiarazione di responsabilita' da accettare al primo accesso. 1.4 (17 nov): logo TopoRescue Maps nell'intestazione, favicon, schermata d'apertura
-const CHIAVE_API = "AIzaSyA3eA9-4n6jc6llgXn805Pus54awLbTxn0";          // Drive API (come Carica Mappe)
-const RADICE = "1Qss5yBi3WuEZ-LSkcJ1TjaKrd8QHeOuu";                     // Cartografia_cond sul Drive
+const VERSIONE = "1.7";   // 1.7 (19 nov): Drive TopoRescue privato (permesso dal cancello Supabase). 1.6 (17 nov): pulsante Mac Intel (dmg _Intel) e come capire che Mac si ha. 1.5 (17 nov): dichiarazione di responsabilita' da accettare al primo accesso. 1.4 (17 nov): logo TopoRescue Maps nell'intestazione, favicon, schermata d'apertura
+// 1.7 (19 nov): Drive TopoRescue PRIVATO: ID e permesso di lettura dal cancello Supabase "permesso-drive".
 const MAIL = "toporescue@gmail.com";
 const APP = { estr: "____Estrazione_Mappe", car: "____Carica_Mappe" };   // in Cartografia_cond/Estrazione_mappe, .dmg e .exe
 const ENTI = ["volontariato", "cnsas", "vvf", "cri", "pubblico", "altro", "privato"];
@@ -318,11 +316,11 @@ const T = {
  dich_check: ["Ho letto e accetto la dichiarazione di responsabilità", "I have read and accept the disclaimer", "J'ai lu et j'accepte la décharge de responsabilité", "Ich habe den Haftungsausschluss gelesen und akzeptiere ihn", "He leído y acepto la exención de responsabilidad"],
  dich_prima: ["La casella si attiva dopo aver aperto il PDF.", "The box is enabled after opening the PDF.", "La case s'active après avoir ouvert le PDF.", "Das Kästchen wird nach dem Öffnen des PDF aktiv.", "La casilla se activa tras abrir el PDF."],
  dich_accetta: ["Accetto e continuo", "Accept and continue", "J'accepte et je continue", "Akzeptieren und weiter", "Acepto y continúo"],
- loc_si: ["Il tuo account è abilitato alla copia locale. Il modo più semplice: nei programmi Estrarre Mappe e Carica Mappe premi «Mappe sul computer...», scegli paese, regione o provincia (le confinanti si aggiungono da sole) e la copia si scarica da sola; poi i programmi lavorano senza internet e controllano gli aggiornamenti. In alternativa puoi aggiungere tutta la cartella condivisa a Google Drive per desktop:",
-            "Your account is authorised for the local copy. The easiest way: in the Estrarre Mappe and Carica Mappe programs press «Mappe sul computer...» (Maps on this computer), choose a country, region or province (neighbours are added automatically) and the copy downloads by itself; the programs then work without internet and check for updates. Alternatively you can add the whole shared folder to Google Drive for desktop:",
-            "Votre compte est habilité à la copie locale. Le plus simple : dans les programmes Estrarre Mappe et Carica Mappe, appuyez sur «Mappe sul computer...» (Cartes sur l'ordinateur), choisissez un pays, une région ou une province (les voisines s'ajoutent toutes seules) et la copie se télécharge d'elle-même ; ensuite les programmes fonctionnent sans internet et vérifient les mises à jour. Sinon vous pouvez ajouter tout le dossier partagé à Google Drive pour ordinateur :",
-            "Ihr Konto ist für die lokale Kopie freigegeben. Am einfachsten: in den Programmen Estrarre Mappe und Carica Mappe auf «Mappe sul computer...» (Karten auf dem Computer) drücken, Land, Region oder Provinz wählen (Nachbarn kommen von selbst dazu), und die Kopie lädt sich selbst; danach arbeiten die Programme ohne Internet und prüfen Updates. Alternativ können Sie den ganzen geteilten Ordner zu Google Drive für Desktop hinzufügen:",
-            "Tu cuenta está habilitada para la copia local. Lo más sencillo: en los programas Estrarre Mappe y Carica Mappe pulsa «Mappe sul computer...» (Mapas en el ordenador), elige país, región o provincia (las limítrofes se añaden solas) y la copia se descarga sola; después los programas funcionan sin internet y comprueban las actualizaciones. Como alternativa puedes añadir toda la carpeta compartida a Google Drive para ordenador:"],
+ loc_si: ["Il tuo account è abilitato alla copia locale. Il modo più semplice: nei programmi Estrarre Mappe e Carica Mappe premi «Mappe sul computer...», scegli paese, regione o provincia (le confinanti si aggiungono da sole) e la copia si scarica da sola; poi i programmi lavorano senza internet e controllano gli aggiornamenti.",
+            "Your account is authorised for the local copy. The easiest way: in the Estrarre Mappe and Carica Mappe programs press «Mappe sul computer...» (Maps on this computer), choose a country, region or province (neighbours are added automatically) and the copy downloads by itself; the programs then work without internet and check for updates.",
+            "Votre compte est habilité à la copie locale. Le plus simple : dans les programmes Estrarre Mappe et Carica Mappe, appuyez sur «Mappe sul computer...» (Cartes sur l'ordinateur), choisissez un pays, une région ou une province (les voisines s'ajoutent toutes seules) et la copie se télécharge d'elle-même ; ensuite les programmes fonctionnent sans internet et vérifient les mises à jour.",
+            "Ihr Konto ist für die lokale Kopie freigegeben. Am einfachsten: in den Programmen Estrarre Mappe und Carica Mappe auf «Mappe sul computer...» (Karten auf dem Computer) drücken, Land, Region oder Provinz wählen (Nachbarn kommen von selbst dazu), und die Kopie lädt sich selbst; danach arbeiten die Programme ohne Internet und prüfen Updates.",
+            "Tu cuenta está habilitada para la copia local. Lo más sencillo: en los programas Estrarre Mappe y Carica Mappe pulsa «Mappe sul computer...» (Mapas en el ordenador), elige país, región o provincia (las limítrofes se añaden solas) y la copia se descarga sola; después los programas funcionan sin internet y comprueban las actualizaciones."],
  loc_passi: [
   "<li>Apri la cartella col pulsante qui sotto, collegato al tuo account Google (anche un Gmail personale).</li><li>Clic destro sulla cartella › <b>Organizza › Aggiungi scorciatoia</b> › <b>Il mio Drive</b>.</li><li>Installa <a href=\"https://www.google.com/drive/download/\" target=\"_blank\" rel=\"noopener\">Google Drive per desktop</a>: la cartella compare in «Il mio Drive».</li><li>Per averla sul disco anche senza internet: clic destro › <b>Disponibile offline</b> (o modalità <b>Mirroring</b>). Si aggiorna da sola; non occupa spazio del tuo account Google, solo del disco. La cartella è in sola lettura.</li>",
   "<li>Open the folder with the button below, signed in to your Google account (a personal Gmail is fine).</li><li>Right-click the folder › <b>Organize › Add shortcut</b> › <b>My Drive</b>.</li><li>Install <a href=\"https://www.google.com/drive/download/\" target=\"_blank\" rel=\"noopener\">Google Drive for desktop</a>: the folder appears in «My Drive».</li><li>To keep it on disk for offline use: right-click › <b>Available offline</b> (or <b>Mirror</b> mode). It updates by itself; it uses disk space, not your Google storage. The folder is read-only.</li>",
@@ -441,7 +439,6 @@ async function entrato(sessione) {
   const u = sessione.user, md = u.user_metadata || {};
   $("m-nome").textContent = [STATO.nome || md.nome, md.cognome].filter(Boolean).join(" ") || u.email;
   $("loc-si").hidden = !STATO.autorizzato; $("loc-no").hidden = !!STATO.autorizzato;
-  $("b-drive").href = "https://drive.google.com/drive/folders/" + RADICE;
   const corpo = "Nome: " + (md.nome || "") + "\nCognome: " + (md.cognome || "") + "\nEmail: " + u.email +
     "\nEnte: " + t("e_" + (md.ente_tipo || "privato")) + "\nGruppo / sezione: " + (md.ente_nome || "") +
     "\n\nReferente del gruppo (nome e telefono o email):\n\nMotivo della richiesta:\n";
@@ -465,10 +462,17 @@ function scegliSO(s) {
   $("ist-mac").hidden = s !== "mac" && s !== "macintel"; $("ist-win").hidden = s !== "win";
   $("b-scarica").disabled = false;
 }
+let PERM = null;
+async function permesso(forza) {
+  if (!forza && PERM && PERM.scade * 1000 - Date.now() > 300000) return PERM;
+  const r = await sb.functions.invoke("permesso-drive", { method: "POST", body: {} });
+  if (r.error || !r.data || !r.data.token) throw new Error("permesso " + ((r.data && r.data.errore) || (r.error && r.error.message) || ""));
+  PERM = r.data; return PERM;
+}
 async function elencoDrive(id) {
-  const q = new URLSearchParams({ q: "'" + id + "' in parents and trashed=false", pageSize: "1000", key: CHIAVE_API,
+  const q = new URLSearchParams({ q: "'" + id + "' in parents and trashed=false", pageSize: "1000",
     fields: "files(id,name,size)", supportsAllDrives: "true", includeItemsFromAllDrives: "true" });
-  const r = await fetch("https://www.googleapis.com/drive/v3/files?" + q, { cache: "no-store" });
+  const r = await fetch("https://www.googleapis.com/drive/v3/files?" + q, { cache: "no-store", headers: { Authorization: "Bearer " + (await permesso()).token } });
   if (!r.ok) throw new Error("Drive " + r.status);
   return (await r.json()).files || [];
 }
@@ -477,11 +481,12 @@ async function elencoDrive(id) {
 // scansione antivirus", che sostituiva questa pagina e fermava il secondo scaricamento.
 function statoScarica(testo, err) { const m = $("scarica-stato"); m.innerHTML = testo || ""; m.hidden = !testo; m.classList.toggle("err", !!err); }
 async function scaricaFile(f, n, tot) {
-  const urls = ["https://www.googleapis.com/download/drive/v3/files/" + f.id + "?alt=media&key=" + CHIAVE_API,
-                "https://www.googleapis.com/drive/v3/files/" + f.id + "?alt=media&key=" + CHIAVE_API];
+  const urls = ["https://www.googleapis.com/download/drive/v3/files/" + f.id + "?alt=media",
+                "https://www.googleapis.com/drive/v3/files/" + f.id + "?alt=media"];
   let r = null, errore = null;
+  const aut = { Authorization: "Bearer " + (await permesso()).token };
   for (const u of urls) {
-    try { r = await fetch(u); if (r.ok) break; errore = new Error("Drive " + r.status); r = null; } catch (e) { errore = e; r = null; }
+    try { r = await fetch(u, { headers: aut }); if (r.ok) break; errore = new Error("Drive " + r.status); r = null; } catch (e) { errore = e; r = null; }
   }
   if (!r) throw errore || new Error("Drive");
   const tutto = +f.size || +r.headers.get("content-length") || 0, pezzi = [];
@@ -506,7 +511,7 @@ async function scaricaApp() {
   statoScarica(t("attendi"));
   let files;
   try {
-    const cart = (await elencoDrive(RADICE)).find(f => f.name === "Estrazione_mappe");
+    const cart = (await elencoDrive((await permesso()).radice)).find(f => f.name === "Estrazione_mappe");
     if (!cart) throw new Error("Estrazione_mappe");
     files = await elencoDrive(cart.id);
   } catch (e) { statoScarica(t("m_drive") + e.message, true); return; }

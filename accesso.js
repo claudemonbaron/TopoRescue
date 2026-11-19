@@ -55,6 +55,21 @@
   if (!window.supabase || !window.supabase.createClient) { apri(); return; }   // libreria non caricata: non si blocca
   var sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
   window.TopoRescue = { client: sb };
+  // 19 nov: Drive TopoRescue PRIVATO. L'ID della cartella e il permesso di lettura (un'ora) li da' il cancello
+  // Supabase "permesso-drive" (solo utenti con login, non bloccati, dichiarazione accettata). Si tiene fino a 5'
+  // dalla scadenza; forza=true lo richiede comunque (es. Google ha risposto 401).
+  var perm = null;
+  window.TopoRescue.permessoDrive = function (forza) {
+    if (!forza && perm && perm.scade * 1000 - Date.now() > 300000) return Promise.resolve(perm);
+    return sb.functions.invoke("permesso-drive", { method: "POST", body: {} }).then(function (r) {
+      if (r.error || !r.data || !r.data.token) {
+        var m = (r.data && r.data.errore) || (r.error && r.error.message) || "errore";
+        throw new Error("Drive TopoRescue: permesso non disponibile (" + m + ")");
+      }
+      perm = r.data;
+      return perm;
+    });
+  };
 
   sb.auth.getSession().then(function (r) {
     var s = r && r.data && r.data.session;
