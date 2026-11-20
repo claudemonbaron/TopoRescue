@@ -250,7 +250,7 @@ section { background: color-mix(in srgb, var(--panel) 90%, transparent) }
 // ---------------------------------------------------------------- impostazioni
 const SUPA_URL = "https://xorshypftmrbtyhrchwy.supabase.co";
 const SUPA_KEY = "sb_publishable_SghE7Wz8rNWEUVVhSpmFew_IBDCCqvk";     // chiave pubblica: fatta per stare nelle pagine
-const VERSIONE = "1.7";   // 1.7 (19 nov): Drive TopoRescue privato (permesso dal cancello Supabase). 1.6 (17 nov): pulsante Mac Intel (dmg _Intel) e come capire che Mac si ha. 1.5 (17 nov): dichiarazione di responsabilita' da accettare al primo accesso. 1.4 (17 nov): logo TopoRescue Maps nell'intestazione, favicon, schermata d'apertura
+const VERSIONE = "1.7.1";   // 1.7.1 (20 nov): Mac Intel riconosciuto da solo (architettura / scheda video). 1.7 (19 nov): Drive TopoRescue privato (permesso dal cancello Supabase). 1.6 (17 nov): pulsante Mac Intel (dmg _Intel) e come capire che Mac si ha. 1.5 (17 nov): dichiarazione di responsabilita' da accettare al primo accesso. 1.4 (17 nov): logo TopoRescue Maps nell'intestazione, favicon, schermata d'apertura
 // 1.7 (19 nov): Drive TopoRescue PRIVATO: ID e permesso di lettura dal cancello Supabase "permesso-drive".
 const MAIL = "toporescue@gmail.com";
 const APP = { estr: "____Estrazione_Mappe", car: "____Carica_Mappe" };   // in Cartografia_cond/Estrazione_mappe, .dmg e .exe
@@ -464,7 +464,29 @@ async function entrato(sessione) {
   if (TORNA) { location.replace(TORNA); return; }
   const so = /Windows/.test(navigator.userAgent) ? "win" : /Mac/.test(navigator.userAgent) ? "mac" : null;
   if (so) scegliSO(so);
+  if (so === "mac") tipoMac().then(m => { if (m && SO === "mac") scegliSO(m); });   // 1.7.1: Mac Intel riconosciuto
   mostra("menu");
+}
+// 1.7.1: il browser dice "Mac" anche sui Mac Intel. Chrome/Edge danno l'architettura (x86 = Intel);
+// per Safari/Firefox si guarda la scheda video (Intel/AMD/NVIDIA = Mac Intel, Apple M = Apple).
+async function tipoMac() {
+  try {
+    if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+      const h = await navigator.userAgentData.getHighEntropyValues(["architecture"]);
+      if (h.architecture === "x86") return "macintel";
+      if (h.architecture === "arm") return "mac";
+    }
+  } catch (e) {}
+  try {
+    const gl = document.createElement("canvas").getContext("webgl");
+    if (gl) {
+      const ext = gl.getExtension("WEBGL_debug_renderer_info");
+      const r = String(gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER) || "");
+      if (/Apple M\d/i.test(r)) return "mac";
+      if (/Intel|AMD|Radeon|NVIDIA|GeForce|Quadro/i.test(r)) return "macintel";
+    }
+  } catch (e) {}
+  return null;   // non si capisce: resta "Mac", la nota spiega come scegliere
 }
 function aggiornaBadge() {
   const b = $("m-badge"); if (!b || !STATO) return;
