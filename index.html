@@ -250,7 +250,7 @@ section { background: color-mix(in srgb, var(--panel) 90%, transparent) }
 // ---------------------------------------------------------------- impostazioni
 const SUPA_URL = "https://xorshypftmrbtyhrchwy.supabase.co";
 const SUPA_KEY = "sb_publishable_SghE7Wz8rNWEUVVhSpmFew_IBDCCqvk";     // chiave pubblica: fatta per stare nelle pagine
-const VERSIONE = "1.7.1";   // 1.7.1 (20 nov): Mac Intel riconosciuto da solo (architettura / scheda video). 1.7 (19 nov): Drive TopoRescue privato (permesso dal cancello Supabase). 1.6 (17 nov): pulsante Mac Intel (dmg _Intel) e come capire che Mac si ha. 1.5 (17 nov): dichiarazione di responsabilita' da accettare al primo accesso. 1.4 (17 nov): logo TopoRescue Maps nell'intestazione, favicon, schermata d'apertura
+const VERSIONE = "1.7.3";   // 1.7.3 (21 nov): dopo la registrazione la pagina resta sul login con email e password e aspetta la conferma (anche fatta dal cellulare): appena confermata entra da sola. 1.7.2 (21 nov): la registrazione non si perde andando a leggere l'informativa (bozza in sessionStorage, password escluse; si riapre sulla registrazione). 1.7.1 (20 nov): Mac Intel riconosciuto da solo (architettura / scheda video). 1.7 (19 nov): Drive TopoRescue privato (permesso dal cancello Supabase). 1.6 (17 nov): pulsante Mac Intel (dmg _Intel) e come capire che Mac si ha. 1.5 (17 nov): dichiarazione di responsabilita' da accettare al primo accesso. 1.4 (17 nov): logo TopoRescue Maps nell'intestazione, favicon, schermata d'apertura
 // 1.7 (19 nov): Drive TopoRescue PRIVATO: ID e permesso di lettura dal cancello Supabase "permesso-drive".
 const MAIL = "toporescue@gmail.com";
 const APP = { estr: "____Estrazione_Mappe", car: "____Carica_Mappe" };   // in Cartografia_cond/Estrazione_mappe, .dmg e .exe
@@ -359,7 +359,8 @@ const T = {
  gratis: ["Le mappe sono gratuite per gli operatori del soccorso e della protezione civile.", "The maps are free for rescue and civil protection operators.", "Les cartes sont gratuites pour les opérateurs du secours et de la protection civile.", "Die Karten sind für Einsatzkräfte von Rettung und Zivilschutz kostenlos.", "Los mapas son gratuitos para los operadores de rescate y protección civil."],
  attendi: ["Un momento…", "One moment…", "Un instant…", "Einen Moment…", "Un momento…"],
  // messaggi
- m_reg_ok: ["Account creato. Ti abbiamo mandato una mail: apri il link per confermare l'indirizzo, poi accedi.", "Account created. We sent you an email: open the link to confirm the address, then sign in.", "Compte créé. Nous vous avons envoyé un e-mail : ouvrez le lien pour confirmer l'adresse, puis connectez-vous.", "Konto erstellt. Wir haben dir eine E-Mail geschickt: öffne den Link zur Bestätigung, dann melde dich an.", "Cuenta creada. Te enviamos un correo: abre el enlace para confirmar la dirección y luego accede."],
+ m_reg_ok: ["Account creato. Ti abbiamo mandato una mail: apri il link per confermare l'indirizzo, anche dal cellulare. Lascia aperta questa pagina: appena confermi, entra da sola.", "Account created. We sent you an email: open the link to confirm the address, also from your phone. Keep this page open: as soon as you confirm, it signs you in by itself.", "Compte créé. Nous vous avons envoyé un e-mail : ouvrez le lien pour confirmer l'adresse, même depuis le téléphone. Laissez cette page ouverte : dès la confirmation, elle vous connecte toute seule.", "Konto erstellt. Wir haben dir eine E-Mail geschickt: öffne den Link zur Bestätigung, auch vom Handy aus. Lass diese Seite offen: sobald du bestätigst, meldet sie dich selbst an.", "Cuenta creada. Te enviamos un correo: abre el enlace para confirmar la dirección, también desde el móvil. Deja abierta esta página: en cuanto confirmes, entrará sola."],
+ m_confermata: ["Email confermata. Se ti eri registrato da un altro dispositivo, torna pure lì: quella pagina entra da sola.", "Email confirmed. If you registered from another device, you can go back to it: that page signs in by itself.", "E-mail confirmé. Si vous vous êtes inscrit depuis un autre appareil, vous pouvez y retourner : cette page se connecte toute seule.", "E-Mail bestätigt. Wenn du dich auf einem anderen Gerät registriert hast, kannst du dorthin zurück: die Seite meldet sich selbst an.", "Correo confirmado. Si te registraste desde otro dispositivo, puedes volver allí: esa página entra sola."],
  m_pw_diverse: ["Le due password non coincidono.", "The two passwords do not match.", "Les deux mots de passe ne correspondent pas.", "Die beiden Passwörter stimmen nicht überein.", "Las dos contraseñas no coinciden."],
  m_credenziali: ["Email o password sbagliate.", "Wrong email or password.", "E-mail ou mot de passe incorrect.", "E-Mail oder Passwort falsch.", "Correo o contraseña incorrectos."],
  m_non_confermata: ["Devi prima confermare l'email: apri il link nella mail che ti abbiamo mandato.", "You must first confirm your email: open the link in the email we sent you.", "Vous devez d'abord confirmer l'e-mail : ouvrez le lien dans l'e-mail envoyé.", "Du musst zuerst die E-Mail bestätigen: öffne den Link in der E-Mail.", "Primero debes confirmar el correo: abre el enlace del correo que te enviamos."],
@@ -412,6 +413,28 @@ let STATO = null, RECUPERO = /type=recovery/.test(location.hash);   // link "pas
 function mostra(v) {
   ["login", "registra", "recupero", "nuovapw", "menu", "attesa", "dichiarazione"].forEach(x => { $("v-" + x).hidden = x !== v; });
   if (v !== "menu") window.scrollTo(0, 0);
+  if (v === "login" || v === "registra") try { sessionStorage.setItem(VISTA_KEY, v); } catch (e) {}
+}
+// 1.7.2: bozza della registrazione. Chi va a leggere l'informativa e torna indietro ritrova i dati scritti
+// (sessionStorage: solo questa scheda, si cancella alla chiusura). Le password non si salvano mai.
+const BOZZA_KEY = "bozza_registrazione", VISTA_KEY = "vista_toporescue";
+const BOZZA_CAMPI = ["r-nome", "r-cognome", "r-email", "r-ente", "r-gruppo"];
+function salvaBozza() {
+  const b = {}; BOZZA_CAMPI.forEach(id => { b[id] = $(id).value; }); b["r-consenso"] = $("r-consenso").checked;
+  try { sessionStorage.setItem(BOZZA_KEY, JSON.stringify(b)); } catch (e) {}
+}
+function rimettiBozza() {
+  let b = null; try { b = JSON.parse(sessionStorage.getItem(BOZZA_KEY) || "null"); } catch (e) {}
+  if (!b) return false;
+  BOZZA_CAMPI.forEach(id => { if (b[id] != null && b[id] !== "") $(id).value = b[id]; });
+  $("r-consenso").checked = !!b["r-consenso"];
+  return true;
+}
+function cancellaBozza() { try { sessionStorage.removeItem(BOZZA_KEY); } catch (e) {} }
+function vistaIniziale() {
+  let v = ""; try { v = sessionStorage.getItem(VISTA_KEY) || ""; } catch (e) {}
+  if (location.hash === "#registrazione" || v === "registra") { rimettiBozza(); return "registra"; }
+  return "login";
 }
 function avvisa(testo, errore) { const m = $("msg"); m.textContent = testo || ""; m.hidden = !testo; m.classList.toggle("err", !!errore); }
 function errore(e) {
@@ -587,8 +610,36 @@ $("f-reg").addEventListener("submit", e => { e.preventDefault(); const b = e.sub
       data: { nome: $("r-nome").value.trim(), cognome: $("r-cognome").value.trim(), ente_tipo: $("r-ente").value,
               ente_nome: $("r-gruppo").value.trim(), consenso: $("r-consenso").checked ? "si" : "no", lingua: LINGUA } } });
     if (error) throw error;
-    $("f-reg").reset(); $("l-email").value = email; mostra("login"); avvisa(t("m_reg_ok"));
+    const pw = $("r-pw").value;
+    $("f-reg").reset(); cancellaBozza(); $("l-email").value = email; $("l-pw").value = pw; mostra("login"); avvisa(t("m_reg_ok"));
+    aspettaConferma(email, pw);
   }); });
+
+// 1.7.3: dopo la registrazione la pagina prova da sola l'accesso ogni 8 s (per 30 minuti, solo finche' resta sul
+// login): finche' la mail non e' confermata Supabase risponde "Email not confirmed"; appena confermata (anche da
+// un altro dispositivo) l'accesso riesce e si entra. La password resta solo in memoria in questa pagina.
+let ATTESA = null;
+function fermaAttesa() { if (ATTESA) { clearInterval(ATTESA.timer); document.removeEventListener("visibilitychange", ATTESA.prova); } ATTESA = null; }
+function aspettaConferma(email, pw) {
+  fermaAttesa();
+  const fine = Date.now() + 30 * 60 * 1000;
+  let incorso = false;
+  const prova = async () => {
+    if (!ATTESA || incorso || document.hidden) return;
+    if (Date.now() > fine || $("v-login").hidden || $("l-email").value.trim() !== email) { fermaAttesa(); return; }
+    incorso = true;
+    try {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+      if (!error && data && data.session) { fermaAttesa(); avvisa(""); $("l-pw").value = ""; await entrato(data.session); }
+      else if (error && !/not confirmed/i.test(error.message || "")) fermaAttesa();
+    } catch (e) {} finally { incorso = false; }
+  };
+  ATTESA = { timer: setInterval(prova, 8000), prova };
+  document.addEventListener("visibilitychange", prova);   // tornando sulla scheda si prova subito
+}
+
+$("f-reg").addEventListener("input", salvaBozza);
+$("f-reg").addEventListener("change", salvaBozza);
 
 $("f-rec").addEventListener("submit", e => { e.preventDefault(); const b = e.submitter || e.target.querySelector("button[type=submit]");
   occupato(b, async () => {
@@ -634,14 +685,14 @@ async function verificaLink() {
   const { data, error } = await sb.auth.verifyOtp({ token_hash: th, type: tipo });
   if (error) { avvisa(errore(error) + " " + t("m_link"), true); mostra("login"); return true; }
   if (tipo === "recovery") { RECUPERO = true; mostra("nuovapw"); return true; }
-  if (data.session) await entrato(data.session); else mostra("login");
+  if (data.session) { await entrato(data.session); avvisa(t("m_confermata")); } else mostra("login");
   return true;
 }
 verificaLink().then(fatto => {
   if (fatto) return;
   sb.auth.getSession().then(({ data }) => {
     if (RECUPERO) { mostra("nuovapw"); return; }
-    if (data.session) entrato(data.session); else mostra("login");
+    if (data.session) entrato(data.session); else mostra(vistaIniziale());
   });
 }).catch(e => { avvisa(errore(e), true); mostra("login"); });
 </script>

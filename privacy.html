@@ -59,7 +59,18 @@ p, li { margin: 0 0 8px } ul { padding-left: 20px; margin: 0 0 8px }
 <h2>7. Mappe e responsabilità</h2>
 <p>Le mappe sono ricavate dalle carte tecniche e dalle banche dati ufficiali degli enti indicati nelle istruzioni, con le loro licenze. Sono messe a disposizione gratuitamente; il titolare declina ogni responsabilità per inesattezze dei dati e per un loro uso improprio.</p>
 
-<p class="sub"><a href="./">← Torna all'accesso</a></p>
+<p class="sub"><a href="./" id="torna">← Torna all'accesso</a></p>
+<script>
+// 21 nov: tornare alla pagina d'accesso senza perdere la registrazione gia' scritta.
+// Aperta in una scheda nuova: si chiude e si torna alla scheda di prima (dati intatti, password comprese);
+// aperta nella stessa scheda: si torna indietro; altrimenti la pagina d'accesso rimette la bozza salvata.
+document.getElementById("torna").addEventListener("click", function (e) {
+  try {
+    if (window.opener && !window.opener.closed) { e.preventDefault(); window.close(); return; }
+    if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) { e.preventDefault(); history.back(); }
+  } catch (x) {}
+});
+</script>
 </main>
 </body>
 </html>
