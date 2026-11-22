@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>TopoRescue – abilitazioni</title>
+<link rel="icon" href="favicon.ico" sizes="any"><link rel="icon" href="toporescue_icona.svg" type="image/svg+xml">
+<style>
+:root {
+  --bg: #eef1f3; --fg: #1d2731; --muted: #5b6875; --line: #c9d1d8; --panel: #ffffff;
+  --accent: #e2620c; --accent-fg: #ffffff; --ok: #2f7d4f; --warn: #b4430b;
+  --f-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg: #141a20; --fg: #e4e9ee; --muted: #93a1ad; --line: #2e3842; --panel: #1c242c;
+  --accent: #f07a2a; --accent-fg: #1a0e05; --ok: #5fbf86; --warn: #ff9a5c; color-scheme: dark } }
+* { box-sizing: border-box }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.45 var(--f-body) }
+main { max-width: 640px; margin: 0 auto; padding: 18px 14px 40px }
+h1 { font-size: 1.3rem; margin: 0 0 12px } h2 { font-size: 1.05rem; margin: 18px 0 8px }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin: 10px 0 }
+.riga { display: flex; gap: 8px; flex-wrap: wrap } .riga > * { flex: 1 1 auto }
+label { display: block; font-size: .9rem; color: var(--muted); margin: 8px 0 3px }
+input, textarea { width: 100%; font: inherit; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg) }
+textarea { min-height: 64px }
+button, .btn { display: inline-block; font: inherit; font-weight: 600; padding: 10px 14px; border-radius: 8px; border: 0; cursor: pointer;
+  background: var(--accent); color: var(--accent-fg); text-decoration: none; text-align: center }
+button.sec, .btn.sec { background: transparent; color: var(--fg); border: 1px solid var(--line) }
+button:disabled { opacity: .5 }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 3px 12px; margin: 0 } dt { color: var(--muted) } dd { margin: 0; word-break: break-word }
+.msg { padding: 10px 12px; border-radius: 8px; margin: 10px 0; background: var(--panel); border: 1px solid var(--line) }
+.msg.err { border-color: var(--warn); color: var(--warn) } .msg.ok { border-color: var(--ok); color: var(--ok) }
+.stato { font-weight: 600 } .si { color: var(--ok) } .no { color: var(--warn) }
+.lista button { width: 100%; text-align: left; background: var(--panel); color: var(--fg); border: 1px solid var(--line); margin: 4px 0; font-weight: 400 }
+.lista small { color: var(--muted); display: block }
+.piccolo { font-size: .85rem; color: var(--muted) }
+</style>
+</head>
+<body>
+<main>
+<h1>TopoRescue · abilitazioni copia locale</h1>
+<div id="msg" class="msg" hidden></div>
+
+<section id="v-login" class="card" hidden>
+  <p>Accedi con il tuo account TopoRescue di amministratore (una volta sola: poi resta ricordato).</p>
+  <form id="f-login">
+    <label>Email</label><input type="email" id="l-email" autocomplete="username" required>
+    <label>Password</label><input type="password" id="l-pw" autocomplete="current-password" required>
+    <p><button type="submit">Entra</button></p>
+  </form>
+</section>
+
+<section id="v-utente" hidden>
+  <div class="card">
+    <h2 id="u-titolo" style="margin-top:0"></h2>
+    <dl id="u-dati"></dl>
+    <label for="u-nota">Nota (facoltativa: chi l'ha verificato, referente...)</label>
+    <textarea id="u-nota"></textarea>
+    <div class="riga" style="margin-top:10px">
+      <button type="button" id="b-si">Abilita</button>
+      <button type="button" id="b-no" class="sec">Non abilitare / togli</button>
+    </div>
+    <p id="u-fatto" hidden style="margin-bottom:0"><a class="btn sec" id="b-mail">Scrivi all'utente</a></p>
+  </div>
+</section>
+
+<section id="v-elenco" hidden>
+  <h2>In attesa (non abilitati)</h2>
+  <div id="lista" class="lista"></div>
+  <p class="piccolo">In alto chi ha chiesto l'abilitazione, poi gli altri iscritti non abilitati, dal più recente.</p>
+</section>
+
+<p class="piccolo"><a href="./">← Pagina TopoRescue</a> · <a href="#" id="b-esci">Esci</a></p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// abilita.html (21 novembre 2026): l'amministratore abilita la copia locale senza aprire Supabase.
+// Le funzioni del database (abilita.sql) rispondono solo a chi ha profili.admin = true: un utente che apre il link
+// della propria mail di richiesta riceve "non autorizzato". Nessuna chiave segreta qui.
+const SUPA_URL = "https://xorshypftmrbtyhrchwy.supabase.co";
+const SUPA_KEY = "sb_publishable_SghE7Wz8rNWEUVVhSpmFew_IBDCCqvk";     // chiave pubblica
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+const $ = id => document.getElementById(id);
+const EMAIL = (new URLSearchParams(location.search).get("email") || "").trim();
+const ENTI = { privato: "Privato", volontariato: "Volontariato di protezione civile", cnsas: "CNSAS", vvf: "Vigili del Fuoco",
+  cri: "Croce Rossa", pubblico: "Forze dell'ordine / ente pubblico", altro: "Altra organizzazione" };
+let ATTUALE = null;
+
+function avvisa(t, tipo) { const m = $("msg"); m.textContent = t || ""; m.hidden = !t; m.className = "msg" + (tipo ? " " + tipo : ""); }
+function mostra(...v) { ["v-login", "v-utente", "v-elenco"].forEach(x => { $(x).hidden = !v.includes(x); }); }
+function data(d) { return d ? new Date(d).toLocaleString("it-IT", { dateStyle: "short", timeStyle: "short" }) : "–"; }
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function ente(u) { return (ENTI[u.ente_tipo] || u.ente_tipo || "") + (u.ente_nome ? " – " + u.ente_nome : ""); }
+
+async function avvio() {
+  const { data: s } = await sb.auth.getSession();
+  if (!s.session) { mostra("v-login"); if (EMAIL) avvisa("Richiesta per " + EMAIL + ": accedi per vederla."); return; }
+  const { data: admin, error } = await sb.rpc("sono_admin");
+  if (error) { avvisa("Errore: " + error.message + (/function|schema cache/i.test(error.message) ? " (manca abilita.sql in Supabase?)" : ""), "err"); return; }
+  if (!admin) { mostra(); avvisa("Questa pagina è solo per l'amministratore di TopoRescue.", "err"); return; }
+  avvisa("");
+  if (EMAIL) await apri(EMAIL);
+  await elenco();
+}
+
+async function apri(email) {
+  const { data: r, error } = await sb.rpc("admin_utenti", { p_email: email });
+  if (error) { avvisa("Errore: " + error.message, "err"); return; }
+  const u = r && r[0];
+  if (!u) { avvisa("Nessun utente con email " + email + ".", "err"); return; }
+  ATTUALE = u;
+  $("u-titolo").textContent = (u.nome + " " + u.cognome).trim() || u.email;
+  $("u-dati").innerHTML =
+    "<dt>Email</dt><dd>" + esc(u.email) + (u.confermata ? "" : " <span class='no'>(email non confermata)</span>") + "</dd>" +
+    "<dt>Ente</dt><dd>" + esc(ente(u)) + "</dd>" +
+    "<dt>Iscritto</dt><dd>" + data(u.creato) + "</dd>" +
+    "<dt>Ultimo accesso</dt><dd>" + data(u.ultimo_accesso) + "</dd>" +
+    "<dt>Richiesta</dt><dd>" + data(u.richiesta_abilitazione) + "</dd>" +
+    "<dt>Stato</dt><dd class='stato " + (u.autorizzato ? "si'>abilitato" : "no'>non abilitato") +
+      (u.abilitato_quando ? " (" + data(u.abilitato_quando) + ")" : "") + (u.bloccato ? " · BLOCCATO" : "") + "</dd>" +
+    (u.note ? "<dt>Note</dt><dd style='white-space:pre-line'>" + esc(u.note) + "</dd>" : "");
+  $("u-nota").value = ""; $("u-fatto").hidden = true;
+  $("b-si").textContent = u.autorizzato ? "Già abilitato" : "Abilita"; $("b-si").disabled = !!u.autorizzato;
+  mostra("v-utente", "v-elenco");
+  window.scrollTo(0, 0);
+}
+
+async function decidi(si) {
+  if (!ATTUALE) return;
+  if (!si && !confirm("Togliere/negare l'abilitazione a " + ATTUALE.email + "?")) return;
+  $("b-si").disabled = $("b-no").disabled = true;
+  const { data: ok, error } = await sb.rpc("admin_abilita", { p_email: ATTUALE.email, p_si: si, p_nota: $("u-nota").value.trim() });
+  $("b-no").disabled = false;
+  if (error || !ok) { avvisa("Non riuscito: " + (error ? error.message : "utente non trovato"), "err"); $("b-si").disabled = false; return; }
+  const nome = ATTUALE.nome || "";
+  const ogg = si ? "TopoRescue: copia locale delle mappe abilitata" : "TopoRescue: richiesta di copia locale";
+  const testo = si
+    ? "Ciao " + nome + ",\n\nti ho abilitato alla copia locale delle mappe TopoRescue.\nNei programmi Estrarre Mappe e Carica Mappe trovi ora il pulsante \"Mappe sul computer...\": chiudi e riapri il programma se era aperto.\nSulla pagina https://claudemonbaron.github.io/TopoRescue/ l'abilitazione si vede al prossimo accesso.\n\nBuon lavoro,\nClaude René Monbaron\nUCS PC ANA PN e PC RFVG\n"
+    : "Ciao " + nome + ",\n\nper ora non posso abilitarti alla copia locale delle mappe: è riservata agli operatori di enti e organizzazioni di soccorso riconosciuti, verificati con email istituzionale o con il referente del gruppo.\nSe ne fai parte, rispondi a questa mail indicando il referente (nome e telefono o email).\nLe mappe restano comunque disponibili dal Drive TopoRescue e dalle pagine web.\n\nClaude René Monbaron\nUCS PC ANA PN e PC RFVG\n";
+  $("b-mail").href = "mailto:" + encodeURIComponent(ATTUALE.email) + "?subject=" + encodeURIComponent(ogg) + "&body=" + encodeURIComponent(testo);
+  avvisa(si ? "Fatto: " + ATTUALE.email + " è abilitato. Se vuoi, scrivigli con il pulsante qui sotto." : "Fatto: " + ATTUALE.email + " non è abilitato.", "ok");
+  await apri(ATTUALE.email);
+  $("u-fatto").hidden = false;
+  await elenco();
+}
+
+async function elenco() {
+  const { data: r, error } = await sb.rpc("admin_utenti", { p_email: null });
+  if (error) return;
+  $("lista").innerHTML = (r || []).map(u =>
+    "<button type='button' data-email='" + esc(u.email) + "'><b>" + esc((u.nome + " " + u.cognome).trim() || u.email) + "</b>" +
+    (u.richiesta_abilitazione ? " · <span class='no'>chiesta il " + data(u.richiesta_abilitazione) + "</span>" : "") +
+    "<small>" + esc(u.email) + " · " + esc(ente(u)) + " · iscritto " + data(u.creato) + (u.confermata ? "" : " · email non confermata") + "</small></button>"
+  ).join("") || "<p class='piccolo'>Nessuno in attesa.</p>";
+  $("lista").querySelectorAll("button").forEach(b => b.onclick = () => apri(b.dataset.email));
+  if ($("v-utente").hidden) mostra("v-elenco");
+}
+
+$("f-login").addEventListener("submit", async e => {
+  e.preventDefault();
+  const { error } = await sb.auth.signInWithPassword({ email: $("l-email").value.trim(), password: $("l-pw").value });
+  if (error) { avvisa("Accesso non riuscito: " + error.message, "err"); return; }
+  $("l-pw").value = ""; avvio();
+});
+$("b-si").onclick = () => decidi(true);
+$("b-no").onclick = () => decidi(false);
+$("b-esci").onclick = async e => { e.preventDefault(); await sb.auth.signOut(); location.reload(); };
+avvio().catch(e => avvisa("Errore: " + e.message, "err"));
+</script>
+</body>
+</html>

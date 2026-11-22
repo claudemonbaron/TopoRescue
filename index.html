@@ -250,9 +250,10 @@ section { background: color-mix(in srgb, var(--panel) 90%, transparent) }
 // ---------------------------------------------------------------- impostazioni
 const SUPA_URL = "https://xorshypftmrbtyhrchwy.supabase.co";
 const SUPA_KEY = "sb_publishable_SghE7Wz8rNWEUVVhSpmFew_IBDCCqvk";     // chiave pubblica: fatta per stare nelle pagine
-const VERSIONE = "1.7.3";   // 1.7.3 (21 nov): dopo la registrazione la pagina resta sul login con email e password e aspetta la conferma (anche fatta dal cellulare): appena confermata entra da sola. 1.7.2 (21 nov): la registrazione non si perde andando a leggere l'informativa (bozza in sessionStorage, password escluse; si riapre sulla registrazione). 1.7.1 (20 nov): Mac Intel riconosciuto da solo (architettura / scheda video). 1.7 (19 nov): Drive TopoRescue privato (permesso dal cancello Supabase). 1.6 (17 nov): pulsante Mac Intel (dmg _Intel) e come capire che Mac si ha. 1.5 (17 nov): dichiarazione di responsabilita' da accettare al primo accesso. 1.4 (17 nov): logo TopoRescue Maps nell'intestazione, favicon, schermata d'apertura
+const VERSIONE = "1.7.4";   // 1.7.4 (21 nov): nella mail di richiesta il link per l'amministratore (abilita.html, funziona solo per lui); la richiesta si segna anche in Supabase. 1.7.3 (21 nov): dopo la registrazione la pagina resta sul login con email e password e aspetta la conferma (anche fatta dal cellulare): appena confermata entra da sola. 1.7.2 (21 nov): la registrazione non si perde andando a leggere l'informativa (bozza in sessionStorage, password escluse; si riapre sulla registrazione). 1.7.1 (20 nov): Mac Intel riconosciuto da solo (architettura / scheda video). 1.7 (19 nov): Drive TopoRescue privato (permesso dal cancello Supabase). 1.6 (17 nov): pulsante Mac Intel (dmg _Intel) e come capire che Mac si ha. 1.5 (17 nov): dichiarazione di responsabilita' da accettare al primo accesso. 1.4 (17 nov): logo TopoRescue Maps nell'intestazione, favicon, schermata d'apertura
 // 1.7 (19 nov): Drive TopoRescue PRIVATO: ID e permesso di lettura dal cancello Supabase "permesso-drive".
 const MAIL = "toporescue@gmail.com";
+const LINK_ABILITA = "https://claudemonbaron.github.io/TopoRescue/abilita.html?email=";   // 1.7.4
 const APP = { estr: "____Estrazione_Mappe", car: "____Carica_Mappe" };   // in Cartografia_cond/Estrazione_mappe, .dmg e .exe
 const ENTI = ["volontariato", "cnsas", "vvf", "cri", "pubblico", "altro", "privato"];
 
@@ -481,8 +482,10 @@ async function entrato(sessione) {
   $("loc-si").hidden = !STATO.autorizzato; $("loc-no").hidden = !!STATO.autorizzato;
   const corpo = "Nome: " + (md.nome || "") + "\nCognome: " + (md.cognome || "") + "\nEmail: " + u.email +
     "\nEnte: " + t("e_" + (md.ente_tipo || "privato")) + "\nGruppo / sezione: " + (md.ente_nome || "") +
-    "\n\nReferente del gruppo (nome e telefono o email):\n\nMotivo della richiesta:\n";
+    "\n\nReferente del gruppo (nome e telefono o email):\n\nMotivo della richiesta:\n" +
+    "\n\n--\nPer l'amministratore (funziona solo con il suo account):\n" + LINK_ABILITA + encodeURIComponent(u.email) + "\n";
   $("b-richiedi").href = "mailto:" + MAIL + "?subject=" + encodeURIComponent("Richiesta abilitazione copia locale – " + u.email) + "&body=" + encodeURIComponent(corpo);
+  $("b-richiedi").onclick = () => { sb.rpc("chiedi_abilitazione").then(() => {}, () => {}); };   // 1.7.4: segna la richiesta
   aggiornaBadge();
   if (TORNA) { location.replace(TORNA); return; }
   const so = /Windows/.test(navigator.userAgent) ? "win" : /Mac/.test(navigator.userAgent) ? "mac" : null;
