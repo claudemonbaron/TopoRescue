@@ -66,6 +66,7 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1p
 .msg.err { border-color: var(--warn); background: var(--accent-soft) }
 .scelta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
 .scelta.tre { grid-template-columns: 1fr 1fr 1fr }
+.scelta.quattro { grid-template-columns: 1fr 1fr }   /* 1.8: Mac, Mac Intel, Windows, Linux in due righe */
 .nota { margin: 0; color: var(--muted); font-size: .85rem }
 .scelta a, .scelta button { display: flex; flex-direction: column; gap: 4px; padding: 14px; border: 1px solid var(--line); border-radius: 9px;
   background: var(--bg); color: var(--fg); text-decoration: none; cursor: pointer; font: inherit; text-align: left; min-width: 0 }
@@ -82,7 +83,7 @@ ol.ist { margin: 0; padding-left: 20px; font-size: .93rem } ol.ist li + li { mar
 .piede a { color: var(--muted) }
 select.lingua { width: auto; padding: 6px 8px; font-size: .9rem }
 code { font: .88em var(--f-mono) }
-@media (max-width: 420px) { .grid2, .scelta, .scelta.tre { grid-template-columns: 1fr } }
+@media (max-width: 420px) { .grid2, .scelta, .scelta.tre, .scelta.quattro { grid-template-columns: 1fr } }
 img.logo { width: 64px; height: 64px; flex: none }
 /* 17 nov: logo TopoRescue in filigrana sullo sfondo (fisso, tenue); riquadri appena trasparenti */
 body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1; opacity: .06;
@@ -207,10 +208,11 @@ section { background: color-mix(in srgb, var(--panel) 90%, transparent) }
   <div class="col">
   <section class="stack">
     <h2 style="margin:0" data-t="sez_app"></h2>
-    <div class="scelta tre" id="so">
+    <div class="scelta quattro" id="so">
       <button type="button" data-so="mac" aria-pressed="false"><b>Mac</b><small data-t="mac_d"></small></button>
       <button type="button" data-so="macintel" aria-pressed="false"><b>Mac Intel</b><small data-t="macintel_d"></small></button>
       <button type="button" data-so="win" aria-pressed="false"><b>Windows</b><small data-t="win_d"></small></button>
+      <button type="button" data-so="lin" aria-pressed="false"><b>Linux</b><small data-t="lin_d"></small></button>
     </div>
     <p class="nota" data-t="quale_mac"></p>
     <label class="check"><input type="checkbox" id="a-estr" checked><span data-t="app_estr"></span></label>
@@ -219,6 +221,7 @@ section { background: color-mix(in srgb, var(--panel) 90%, transparent) }
     <p class="msg" id="scarica-stato" hidden></p>
     <div id="ist-mac" hidden><ol class="ist" data-t="ist_mac"></ol></div>
     <div id="ist-win" hidden><ol class="ist" data-t="ist_win"></ol></div>
+    <div id="ist-lin" hidden><ol class="ist" data-t="ist_lin"></ol></div>
   </section>
 
   <section class="stack">
@@ -250,11 +253,11 @@ section { background: color-mix(in srgb, var(--panel) 90%, transparent) }
 // ---------------------------------------------------------------- impostazioni
 const SUPA_URL = "https://xorshypftmrbtyhrchwy.supabase.co";
 const SUPA_KEY = "sb_publishable_SghE7Wz8rNWEUVVhSpmFew_IBDCCqvk";     // chiave pubblica: fatta per stare nelle pagine
-const VERSIONE = "1.7.4";   // 1.7.4 (21 nov): nella mail di richiesta il link per l'amministratore (abilita.html, funziona solo per lui); la richiesta si segna anche in Supabase. 1.7.3 (21 nov): dopo la registrazione la pagina resta sul login con email e password e aspetta la conferma (anche fatta dal cellulare): appena confermata entra da sola. 1.7.2 (21 nov): la registrazione non si perde andando a leggere l'informativa (bozza in sessionStorage, password escluse; si riapre sulla registrazione). 1.7.1 (20 nov): Mac Intel riconosciuto da solo (architettura / scheda video). 1.7 (19 nov): Drive TopoRescue privato (permesso dal cancello Supabase). 1.6 (17 nov): pulsante Mac Intel (dmg _Intel) e come capire che Mac si ha. 1.5 (17 nov): dichiarazione di responsabilita' da accettare al primo accesso. 1.4 (17 nov): logo TopoRescue Maps nell'intestazione, favicon, schermata d'apertura
+const VERSIONE = "1.8";   // 1.8 (28 nov): programmi anche per LINUX (pulsante Linux, AppImage ____..._Linux.AppImage, istruzioni; Linux riconosciuto dal browser). 1.7.4 (21 nov): nella mail di richiesta il link per l'amministratore (abilita.html, funziona solo per lui); la richiesta si segna anche in Supabase. 1.7.3 (21 nov): dopo la registrazione la pagina resta sul login con email e password e aspetta la conferma (anche fatta dal cellulare): appena confermata entra da sola. 1.7.2 (21 nov): la registrazione non si perde andando a leggere l'informativa (bozza in sessionStorage, password escluse; si riapre sulla registrazione). 1.7.1 (20 nov): Mac Intel riconosciuto da solo (architettura / scheda video). 1.7 (19 nov): Drive TopoRescue privato (permesso dal cancello Supabase). 1.6 (17 nov): pulsante Mac Intel (dmg _Intel) e come capire che Mac si ha. 1.5 (17 nov): dichiarazione di responsabilita' da accettare al primo accesso. 1.4 (17 nov): logo TopoRescue Maps nell'intestazione, favicon, schermata d'apertura
 // 1.7 (19 nov): Drive TopoRescue PRIVATO: ID e permesso di lettura dal cancello Supabase "permesso-drive".
 const MAIL = "toporescue@gmail.com";
 const LINK_ABILITA = "https://claudemonbaron.github.io/TopoRescue/abilita.html?email=";   // 1.7.4
-const APP = { estr: "____Estrazione_Mappe", car: "____Carica_Mappe" };   // in Cartografia_cond/Estrazione_mappe, .dmg e .exe
+const APP = { estr: "____Estrazione_Mappe", car: "____Carica_Mappe" };   // in Cartografia_cond/Estrazione_mappe, .dmg, .exe e _Linux.AppImage
 const ENTI = ["volontariato", "cnsas", "vvf", "cri", "pubblico", "altro", "privato"];
 
 // ---------------------------------------------------------------- testi (IT EN FR DE ES)
@@ -307,15 +310,21 @@ const T = {
              "Welcher Mac? Menü  › <b>Über diesen Mac</b>: steht dort <b>Chip</b> Apple M…, <b>Mac</b> wählen; steht dort <b>Prozessor</b> … Intel, <b>Mac Intel</b> wählen.",
              "¿Qué Mac tienes? Menú  › <b>Acerca de este Mac</b>: si pone <b>Chip</b> Apple M… elige <b>Mac</b>; si pone <b>Procesador</b> … Intel elige <b>Mac Intel</b>."],
  win_d: ["Windows 10 e 11", "Windows 10 and 11", "Windows 10 et 11", "Windows 10 und 11", "Windows 10 y 11"],
+ lin_d: ["Ubuntu 22.04 o più recente e simili (PC Intel/AMD)", "Ubuntu 22.04 or later and similar (Intel/AMD PC)", "Ubuntu 22.04 ou plus récent et similaires (PC Intel/AMD)", "Ubuntu 22.04 oder neuer und ähnliche (Intel/AMD-PC)", "Ubuntu 22.04 o posterior y similares (PC Intel/AMD)"],
  app_estr: ["Estrazione Mappe – DXF, QGIS, Global Mapper, anche senza internet", "Estrazione Mappe – DXF, QGIS, Global Mapper, also offline", "Estrazione Mappe – DXF, QGIS, Global Mapper, aussi hors ligne", "Estrazione Mappe – DXF, QGIS, Global Mapper, auch offline", "Estrazione Mappe – DXF, QGIS, Global Mapper, también sin internet"],
  app_car: ["Carica Mappe – mappe Garmin nel GPS e in QMapShack", "Carica Mappe – Garmin maps to the GPS and QMapShack", "Carica Mappe – cartes Garmin dans le GPS et QMapShack", "Carica Mappe – Garmin-Karten auf das GPS und in QMapShack", "Carica Mappe – mapas Garmin al GPS y a QMapShack"],
  scarica_app: ["Scarica i programmi", "Download the programs", "Télécharger les programmes", "Programme herunterladen", "Descargar los programas"],
- scegli_so: ["Scegli Mac o Windows", "Choose Mac or Windows", "Choisir Mac ou Windows", "Mac oder Windows wählen", "Elige Mac o Windows"],
+ scegli_so: ["Scegli Mac, Windows o Linux", "Choose Mac, Windows or Linux", "Choisir Mac, Windows ou Linux", "Mac, Windows oder Linux wählen", "Elige Mac, Windows o Linux"],
  ist_mac: ["<li>Apri il file <code>.dmg</code> scaricato e trascina il programma sulla Scrivania o in Applicazioni, poi espelli il dmg.</li><li>La prima volta aprilo con clic destro › <b>Apri</b>: il programma non è firmato da Apple.</li><li>Al primo avvio accedi con la stessa email e password di questa pagina. Gli aggiornamenti li propone il programma da solo.</li>",
            "<li>Open the downloaded <code>.dmg</code> and drag the program to the Desktop or Applications, then eject the dmg.</li><li>The first time, open it with right-click › <b>Open</b>: the program is not signed by Apple.</li><li>At first start sign in with the same email and password as this page. Updates are offered by the program itself.</li>",
            "<li>Ouvrir le <code>.dmg</code> téléchargé et glisser le programme sur le Bureau ou dans Applications, puis éjecter le dmg.</li><li>La première fois, l'ouvrir avec clic droit › <b>Ouvrir</b> : le programme n'est pas signé par Apple.</li><li>Au premier lancement, se connecter avec le même e-mail et mot de passe que cette page. Les mises à jour sont proposées par le programme.</li>",
            "<li>Die heruntergeladene <code>.dmg</code> öffnen und das Programm auf den Schreibtisch oder in Programme ziehen, dann die dmg auswerfen.</li><li>Beim ersten Mal mit Rechtsklick › <b>Öffnen</b> starten: das Programm ist nicht von Apple signiert.</li><li>Beim ersten Start mit derselben E-Mail und demselben Passwort wie auf dieser Seite anmelden. Updates bietet das Programm selbst an.</li>",
            "<li>Abre el <code>.dmg</code> descargado y arrastra el programa al Escritorio o a Aplicaciones, luego expulsa el dmg.</li><li>La primera vez ábrelo con clic derecho › <b>Abrir</b>: el programa no está firmado por Apple.</li><li>En el primer arranque accede con el mismo correo y contraseña de esta página. Las actualizaciones las propone el programa.</li>"],
+ ist_lin: ["<li>Metti il file <code>.AppImage</code> scaricato in una cartella tua (per esempio <code>~/Applicazioni</code>), poi clic destro › <b>Proprietà</b> › <b>Consenti l'esecuzione come programma</b> (oppure <code>chmod +x</code>) e aprilo con doppio clic: non serve installarlo.</li><li>Se non parte, su Ubuntu manca FUSE: <code>sudo apt install libfuse2</code> (Ubuntu 24.04 e successivi: <code>libfuse2t64</code>).</li><li>Programmi consigliati: QGIS da Flathub (<code>flatpak install flathub org.qgis.qgis</code>) e QMapShack (<code>sudo apt install qmapshack</code>). In QGIS, perché i pulsanti dei progetti funzionino: <b>Impostazioni › Opzioni › Generale › Project trust › Always trust</b>.</li><li>Al primo avvio il programma chiede se aggiungersi al <b>menu Applicazioni</b> con la sua icona (Sì) o restare solo un file (No). Dopo è meglio non spostare il file.</li><li>Al primo avvio accedi con la stessa email e password di questa pagina. Gli aggiornamenti li propone il programma da solo.</li>",
+           "<li>Put the downloaded <code>.AppImage</code> in a folder of yours (e.g. <code>~/Applications</code>), then right-click › <b>Properties</b> › <b>Allow executing file as program</b> (or <code>chmod +x</code>) and double-click it: no installation needed.</li><li>If it does not start, Ubuntu is missing FUSE: <code>sudo apt install libfuse2</code> (Ubuntu 24.04 and later: <code>libfuse2t64</code>).</li><li>Recommended programs: QGIS from Flathub (<code>flatpak install flathub org.qgis.qgis</code>) and QMapShack (<code>sudo apt install qmapshack</code>). In QGIS, for the project buttons to work: <b>Settings › Options › General › Project trust › Always trust</b>.</li><li>At first start the program asks whether to add itself to the <b>Applications menu</b> with its icon (Yes) or stay just a file (No). Afterwards, better not to move the file.</li><li>At first start sign in with the same email and password as this page. Updates are offered by the program itself.</li>",
+           "<li>Mettre le <code>.AppImage</code> téléchargé dans un dossier à vous (par exemple <code>~/Applications</code>), puis clic droit › <b>Propriétés</b> › <b>Autoriser l'exécution du fichier comme un programme</b> (ou <code>chmod +x</code>) et l'ouvrir par double-clic : pas d'installation.</li><li>S'il ne démarre pas, il manque FUSE à Ubuntu : <code>sudo apt install libfuse2</code> (Ubuntu 24.04 et suivants : <code>libfuse2t64</code>).</li><li>Programmes conseillés : QGIS depuis Flathub (<code>flatpak install flathub org.qgis.qgis</code>) et QMapShack (<code>sudo apt install qmapshack</code>). Dans QGIS, pour que les boutons des projets fonctionnent : <b>Préférences › Options › Général › Project trust › Always trust</b>.</li><li>Au premier lancement le programme demande s'il doit s'ajouter au <b>menu Applications</b> avec son icône (Oui) ou rester un simple fichier (Non). Ensuite, mieux vaut ne plus déplacer le fichier.</li><li>Au premier lancement, se connecter avec le même e-mail et mot de passe que cette page. Les mises à jour sont proposées par le programme.</li>",
+           "<li>Die heruntergeladene <code>.AppImage</code> in einen eigenen Ordner legen (z. B. <code>~/Anwendungen</code>), dann Rechtsklick › <b>Eigenschaften</b> › <b>Ausführen der Datei als Programm erlauben</b> (oder <code>chmod +x</code>) und doppelklicken: keine Installation nötig.</li><li>Startet sie nicht, fehlt unter Ubuntu FUSE: <code>sudo apt install libfuse2</code> (Ubuntu 24.04 und neuer: <code>libfuse2t64</code>).</li><li>Empfohlene Programme: QGIS von Flathub (<code>flatpak install flathub org.qgis.qgis</code>) und QMapShack (<code>sudo apt install qmapshack</code>). In QGIS, damit die Knöpfe der Projekte funktionieren: <b>Einstellungen › Optionen › Allgemein › Project trust › Always trust</b>.</li><li>Beim ersten Start fragt das Programm, ob es sich mit seinem Symbol zum <b>Anwendungsmenü</b> hinzufügen (Ja) oder nur eine Datei bleiben soll (Nein). Danach die Datei besser nicht mehr verschieben.</li><li>Beim ersten Start mit derselben E-Mail und demselben Passwort wie auf dieser Seite anmelden. Updates bietet das Programm selbst an.</li>",
+           "<li>Pon el <code>.AppImage</code> descargado en una carpeta tuya (por ejemplo <code>~/Aplicaciones</code>), luego clic derecho › <b>Propiedades</b> › <b>Permitir ejecutar el archivo como un programa</b> (o <code>chmod +x</code>) y ábrelo con doble clic: no hace falta instalarlo.</li><li>Si no arranca, a Ubuntu le falta FUSE: <code>sudo apt install libfuse2</code> (Ubuntu 24.04 y posteriores: <code>libfuse2t64</code>).</li><li>Programas recomendados: QGIS desde Flathub (<code>flatpak install flathub org.qgis.qgis</code>) y QMapShack (<code>sudo apt install qmapshack</code>). En QGIS, para que funcionen los botones de los proyectos: <b>Configuración › Opciones › General › Project trust › Always trust</b>.</li><li>En el primer arranque el programa pregunta si añadirse al <b>menú Aplicaciones</b> con su icono (Sí) o quedarse solo como archivo (No). Después mejor no mover el archivo.</li><li>En el primer arranque accede con el mismo correo y contraseña de esta página. Las actualizaciones las propone el programa.</li>"],
  ist_win: ["<li>Copia il file <code>.exe</code> scaricato dove vuoi (per esempio sul Desktop) e aprilo con doppio clic: non serve installarlo.</li><li>Se compare l'avviso di Windows SmartScreen: <b>Ulteriori informazioni › Esegui comunque</b>.</li><li>Al primo avvio accedi con la stessa email e password di questa pagina. Gli aggiornamenti li propone il programma da solo.</li>",
            "<li>Copy the downloaded <code>.exe</code> wherever you like (e.g. the Desktop) and double-click it: no installation needed.</li><li>If Windows SmartScreen appears: <b>More info › Run anyway</b>.</li><li>At first start sign in with the same email and password as this page. Updates are offered by the program itself.</li>",
            "<li>Copier le <code>.exe</code> téléchargé où vous voulez (par exemple sur le Bureau) et l'ouvrir par double-clic : pas d'installation.</li><li>Si Windows SmartScreen apparaît : <b>Informations complémentaires › Exécuter quand même</b>.</li><li>Au premier lancement, se connecter avec le même e-mail et mot de passe que cette page. Les mises à jour sont proposées par le programme.</li>",
@@ -488,7 +497,8 @@ async function entrato(sessione) {
   $("b-richiedi").onclick = () => { sb.rpc("chiedi_abilitazione").then(() => {}, () => {}); };   // 1.7.4: segna la richiesta
   aggiornaBadge();
   if (TORNA) { location.replace(TORNA); return; }
-  const so = /Windows/.test(navigator.userAgent) ? "win" : /Mac/.test(navigator.userAgent) ? "mac" : null;
+  const ua = navigator.userAgent;   // 1.8: anche Linux (non Android)
+  const so = /Windows/.test(ua) ? "win" : /Mac/.test(ua) ? "mac" : (/Linux/.test(ua) && !/Android/.test(ua)) ? "lin" : null;
   if (so) scegliSO(so);
   if (so === "mac") tipoMac().then(m => { if (m && SO === "mac") scegliSO(m); });   // 1.7.1: Mac Intel riconosciuto
   mostra("menu");
@@ -524,7 +534,7 @@ let SO = null;
 function scegliSO(s) {
   SO = s;
   document.querySelectorAll("#so [data-so]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.so === s)));
-  $("ist-mac").hidden = s !== "mac" && s !== "macintel"; $("ist-win").hidden = s !== "win";
+  $("ist-mac").hidden = s !== "mac" && s !== "macintel"; $("ist-win").hidden = s !== "win"; $("ist-lin").hidden = s !== "lin";
   $("b-scarica").disabled = false;
 }
 let PERM = null;
@@ -569,7 +579,7 @@ async function scaricaFile(f, n, tot) {
   setTimeout(() => URL.revokeObjectURL(url), 120000);
 }
 async function scaricaApp() {
-  const est = SO === "mac" ? ".dmg" : SO === "macintel" ? "_Intel.dmg" : ".exe";   // 1.6: Mac Intel -> ____..._Intel.dmg
+  const est = SO === "mac" ? ".dmg" : SO === "macintel" ? "_Intel.dmg" : SO === "lin" ? "_Linux.AppImage" : ".exe";   // 1.6: Mac Intel -> ____..._Intel.dmg; 1.8: Linux
   const voluti = [$("a-estr").checked && APP.estr, $("a-car").checked && APP.car].filter(Boolean).map(n => n + est);
   if (!voluti.length) return;
   statoScarica(t("attendi"));
